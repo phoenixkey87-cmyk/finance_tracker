@@ -39,7 +39,8 @@
     "grossPerCheck": 3045.40,
     "takeHomePerCheck": 2145.95,
     "frequency": "biweekly",
-    "checksPerYear": 26
+    "checksPerYear": 26,
+    "lastPayday": "2026-09-24"
   },
   "spendPeriod": "Last 30 days (as of 9/25/2026)",
   "spending": [

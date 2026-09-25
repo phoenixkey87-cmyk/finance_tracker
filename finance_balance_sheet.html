@@ -100,6 +100,24 @@
     </div>
 
     <div class="panel">
+        <h2>Paycheck Schedule <span class="hint">Next 12 months. ⭐ = a month with 3 paychecks — extra to attack debt.</span></h2>
+        <div class="tablewrap">
+            <table id="payScheduleTable">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th class="num">Paychecks</th>
+                        <th class="num">Take-home that month</th>
+                        <th>Paydays</th>
+                    </tr>
+                </thead>
+                <tbody id="payScheduleBody"></tbody>
+            </table>
+        </div>
+        <div class="add-row" id="payScheduleNote" style="font-size:.78rem;color:var(--muted);"></div>
+    </div>
+
+    <div class="panel">
         <h2>Upcoming Payments <span class="hint">Sorted by due date. Red = due within 7 days.</span></h2>
         <div class="tablewrap">
             <table id="calTable">
@@ -257,6 +275,7 @@ function isProperty(a){ return a.type==='Other' && num(a.balance)>0; }
 function render() {
     renderStats();
     renderIncome();
+    renderPaySchedule();
     renderCalendar();
     renderAccounts();
     renderGoals();
@@ -296,6 +315,55 @@ function renderIncome(){
             <div class="value ${c.cls}">${c.value}</div>
             <div class="note">${c.note}</div>
         </div>`).join('');
+}
+
+function renderPaySchedule(){
+    const body = document.getElementById('payScheduleBody');
+    if(!body) return;
+    const inc = data.income;
+    if(!inc || inc.frequency!=='biweekly' || !inc.lastPayday){
+        body.innerHTML = '<tr><td colspan="4" class="note">Add a bi-weekly income with a known payday to project the schedule.</td></tr>';
+        document.getElementById('payScheduleNote').textContent='';
+        return;
+    }
+    const take = num(inc.takeHomePerCheck);
+    // Generate paydays for the next 12 months from an anchor payday.
+    const anchor = new Date(inc.lastPayday+'T00:00:00');
+    const today = new Date(); today.setHours(0,0,0,0);
+    const end = new Date(today); end.setMonth(end.getMonth()+12);
+    // Walk anchor back to before today, then forward collecting paydays in range.
+    let d = new Date(anchor);
+    while(d > today) d.setDate(d.getDate()-14);
+    const paydays = [];
+    while(d <= end){
+        if(d >= today) paydays.push(new Date(d));
+        d.setDate(d.getDate()+14);
+    }
+    // Group by year-month.
+    const months = {};
+    paydays.forEach(p=>{
+        const key = p.getFullYear()+'-'+String(p.getMonth()+1).padStart(2,'0');
+        (months[key] = months[key] || []).push(p);
+    });
+    const keys = Object.keys(months).sort();
+    let threeCheckMonths = 0;
+    body.innerHTML = keys.map(k=>{
+        const days = months[k];
+        const three = days.length>=3;
+        if(three) threeCheckMonths++;
+        const label = new Date(k+'-01T00:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+        const dayList = days.map(p=>p.toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ');
+        return `<tr${three?' style="background:#f0fbf4;"':''}>
+            <td>${three?'⭐ ':''}${label}</td>
+            <td class="num">${days.length}</td>
+            <td class="num">${money(days.length*take)}</td>
+            <td style="font-size:.8rem;color:var(--muted)">${dayList}</td>
+        </tr>`;
+    }).join('');
+    const note = document.getElementById('payScheduleNote');
+    note.innerHTML = threeCheckMonths>0
+        ? `You have <b>${threeCheckMonths}</b> three-paycheck month(s) in the next year. The extra ${money(take)} check in each is a natural chance to throw a lump sum at your highest-APR debt.`
+        : 'No three-paycheck months fall in this window.';
 }
 
 function renderCalendar(){
