@@ -3,9 +3,11 @@
     { "name": "Vantage Checking *0050", "type": "Checking", "balance": 616.76, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Regular Savings *0000", "type": "Savings", "balance": 734.61, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Vacation Account *0010", "type": "Savings", "balance": 601.28, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
+    { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 0, "due": "2026-09-27", "apr": 0, "limit": 3800, "status": "Current" },
     { "name": "Flex Pay HELOC *0002", "type": "Loan", "balance": 13624.26, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" }
   ],
   "goals": [
+    { "title": "Pay down Ollo Platinum", "target": 0, "current": 2922.37, "kind": "debt" },
     { "title": "Pay down Flex Pay HELOC", "target": 0, "current": 13624.26, "kind": "debt" },
     { "title": "Emergency / Vacation Fund", "target": 1000, "current": 601.28, "kind": "savings" },
     { "title": "Grow Regular Savings", "target": 5000, "current": 734.61, "kind": "savings" },
