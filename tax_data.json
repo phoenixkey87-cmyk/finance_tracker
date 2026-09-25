@@ -1,5 +1,5 @@
 {
-  "dataVersion": 20261002,
+  "dataVersion": 20261003,
   "taxYear": 2026,
   "mileageRate": 0.70,
   "businesses": [
@@ -17,7 +17,8 @@
     { "date": "2026-08-03", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 444.24, "note": "United outbound STL->ORD->CUN (10/9). Conf OPZSZG. Paid Visa *1568. Cancun trip." },
     { "date": "2026-11-12", "business": "Phoenix Travel", "category": "Hotels/Lodging", "amount": 610.00, "note": "Flamingo Las Vegas (11/12-11/15). Conf N6KQ6. Room $388.16 + fees $149.85 + tax $71.99." },
     { "date": "2026-11-13", "business": "Phoenix Travel", "category": "Travel (other)", "amount": 298.00, "note": "Jeezy concert ticket, PH Live (11/13). Sec 207 Row A Seat 10. Vegas business trip." },
-    { "date": "2026-04-29", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 368.37, "note": "United PSP->DEN->STL, travel 7/26. Conf F249VV. Paid PayPal 4/29." }
+    { "date": "2026-04-29", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 368.37, "note": "United PSP->DEN->STL, travel 7/26. Conf F249VV. Paid PayPal 4/29." },
+    { "date": "2026-05-26", "business": "Phoenix Travel", "category": "Travel (other)", "amount": 545.00, "note": "Norwegian Getaway 3-day Bahamas cruise (9/18-9/21). Res 65286236. Your half of $1,090; Dwayna reimbursed her $545." }
   ],
   "mileage": [
     { "date": "2026-09-15", "business": "Phoenix Travel", "miles": 120, "purpose": "Example - client meeting" }
