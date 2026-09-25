@@ -474,27 +474,36 @@ function renderCalendar(){
     const body = document.getElementById('calBody');
     if(!body) return;
     const today = new Date(); today.setHours(0,0,0,0);
+    // Next occurrence of a monthly recurring draft on a given day-of-month.
+    function nextMonthlyDate(day){
+        let d = new Date(today.getFullYear(), today.getMonth(), day);
+        if(d < today) d = new Date(today.getFullYear(), today.getMonth()+1, day);
+        return d;
+    }
     const items = data.accounts
-        .filter(a=>a.due && (num(a.min)>0 || num(a.pay)>0 || ['Credit Card','Loan','Bill'].includes(a.type)))
+        .filter(a=> num(a.draftDay)>0 || (a.due && (num(a.min)>0 || num(a.pay)>0 || ['Credit Card','Loan','Bill'].includes(a.type))))
         .map(a=>{
-            const d = new Date(a.due+'T00:00:00');
+            const recurring = num(a.draftDay)>0;
+            const d = recurring ? nextMonthlyDate(num(a.draftDay)) : new Date(a.due+'T00:00:00');
             const days = Math.round((d - today)/86400000);
             const amt = num(a.min)>0 ? num(a.min) : (num(a.pay)>0?num(a.pay):remaining(a));
-            return { a, d, days, amt };
+            return { a, d, days, amt, recurring };
         })
         .sort((x,y)=> x.d - y.d);
     if(!items.length){ body.innerHTML = '<tr><td colspan="5" class="note">No upcoming due dates recorded.</td></tr>'; return; }
     body.innerHTML = items.map(it=>{
         const soon = it.days>=0 && it.days<=7;
         const overdue = it.days<0;
-        const color = overdue?'#d94c4c':(soon?'#e0a400':'inherit');
-        const dayTxt = overdue?('OVERDUE '+Math.abs(it.days)+'d'):(it.days===0?'TODAY':it.days+'d');
+        const color = overdue?'var(--bad)':(soon?'var(--warn)':'inherit');
+        const wt = (soon||overdue)?'700':'400';
+        const dayTxt = overdue?('OVERDUE '+Math.abs(it.days)+'d'):(it.days===0?'TODAY':'in '+it.days+'d');
+        const recurTag = it.recurring ? ' <span style="font-size:.68rem;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:4px;">monthly</span>' : '';
         return `<tr>
-            <td style="color:${color};font-weight:${(soon||overdue)?'800':'400'}">${it.d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
-            <td style="color:${color};font-weight:${(soon||overdue)?'800':'400'}">${dayTxt}</td>
-            <td>${it.a.name}</td>
+            <td style="color:${color};font-weight:${wt}">${it.d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+            <td style="color:${color};font-weight:${wt}">${dayTxt}</td>
+            <td>${it.a.name}${recurTag}</td>
             <td class="num">${money(it.amt)}</td>
-            <td><span style="color:${STATUS_COLOR[it.a.status]||'#1a2330'};font-weight:700;font-size:.8rem;">${it.a.status}</span></td>
+            <td><span style="color:${STATUS_COLOR[it.a.status]||'var(--ink)'};font-weight:700;font-size:.8rem;">${it.a.status}</span></td>
         </tr>`;
     }).join('');
 }
