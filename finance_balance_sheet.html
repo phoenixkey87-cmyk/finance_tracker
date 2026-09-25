@@ -85,6 +85,7 @@
         </div>
         <div class="toolbar">
             <button class="primary" onclick="addAccount()">+ Add account</button>
+            <button class="ghost" onclick="reloadFromRepo()">↻ Reload from repo</button>
             <button class="ghost" onclick="exportJSON()">⬇ Export data</button>
             <button class="ghost" onclick="document.getElementById('importFile').click()">⬆ Import data</button>
             <button class="ghost" onclick="exportCSV()">⬇ CSV</button>
@@ -706,6 +707,18 @@ function importJSON(e){
     };
     reader.readAsText(file);
     e.target.value = '';
+}
+
+// Force-load the committed finance_data.json from the repo, overwriting local browser data.
+async function reloadFromRepo(){
+    if(!confirm('Reload the latest data from the repo? This replaces the data currently shown in this browser.')) return;
+    try {
+        const res = await fetch('finance_data.json?ts='+Date.now(),{cache:'no-store'});
+        if(!res.ok){ alert('Could not reach finance_data.json (HTTP '+res.status+'). Open the page from your GitHub Pages link, not a local file.'); return; }
+        const j = await res.json();
+        if(j.accounts && j.goals){ if(!j.spending) j.spending=[]; data=j; render(); alert('Loaded the latest data from the repo.'); }
+        else alert('finance_data.json did not look like valid finance data.');
+    } catch(e){ alert('Reload failed: '+e.message); }
 }
 
 // Auto-load finance_data.json sitting next to this file (works when served, e.g. GitHub Pages)
