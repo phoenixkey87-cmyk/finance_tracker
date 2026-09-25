@@ -369,13 +369,18 @@ function renderIncome(){
         .reduce((s,a)=>s + Math.max(num(a.min), 0), 0);
     const monthlySpend = (data.spending||[]).reduce((s,r)=>s+num(r.amount),0);
     const leftover = m.take - monthlyDebtMins;
+    // Auto-save contributions pulled from paychecks (e.g. $100/check into savings)
+    const perYear = m.perYear || 26;
+    const autoSaveMonthly = data.accounts.reduce((s,a)=>s + num(a.contribPerCheck)*perYear/12, 0);
+    const dividendMonthly = data.accounts.reduce((s,a)=>s + num(a.dividendMonthly), 0);
     const hint = document.getElementById('incomeHint');
     if(hint) hint.textContent = inc.source ? (inc.source+' • '+inc.frequency+' • '+money(num(inc.takeHomePerCheck))+'/check') : '';
     const cards = [
-        { label:'Take-home / month', value:money(m.take), cls:'good', note:'~'+m.perYear+' checks/yr' },
+        { label:'Take-home / month', value:money(m.take), cls:'good', note:'~'+perYear+' checks/yr' },
         { label:'Min payments / month', value:money(monthlyDebtMins), cls:'', note:'Sum of listed minimums' },
         { label:'After minimums', value:money(leftover), cls:leftover>=0?'good':'bad', note:'Take-home − minimums' },
-        { label:'Recent monthly spend', value:money(monthlySpend), cls:'', note:'From spending panel' }
+        { label:'Auto-saved / month', value:money(autoSaveMonthly), cls:'good', note:'From paycheck splits' },
+        { label:'Dividends / month', value:money(dividendMonthly), cls:'good', note:'Interest earned on savings' }
     ];
     el.innerHTML = cards.map(c=>`
         <div class="stat">

@@ -1,7 +1,7 @@
 {
   "accounts": [
     { "name": "Vantage Checking *0050", "type": "Checking", "balance": 616.76, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
-    { "name": "Regular Savings *0000", "type": "Savings", "balance": 734.61, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
+    { "name": "Regular Savings *0000", "type": "Savings", "balance": 734.61, "paid": 0, "min": 0, "due": "", "apr": 0, "contribPerCheck": 100, "dividendMonthly": 0.09, "note": "Auto-saves ~$100/paycheck. Earns monthly dividend (~$0.09).", "status": "Current" },
     { "name": "Vacation Account *0010", "type": "Savings", "balance": 601.28, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 99.00, "due": "2026-09-27", "apr": 29.24, "limit": 3800, "pay": 116, "note": "29.24% APR. Min $99. Stmt bal $2,753.24. Utilities here.", "status": "Current" },
     { "name": "PayPal Credit Card *1214", "type": "Credit Card", "balance": 3171.63, "paid": 0, "min": 62.00, "due": "2026-10-09", "apr": 29.64, "limit": 5000, "pay": 136, "note": "29.64% APR (penalty 34.24%). Deferred-interest promos ~$1,325 expire Feb/Mar 2027 - pay those first!", "status": "Current" },
