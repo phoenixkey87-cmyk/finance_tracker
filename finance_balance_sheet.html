@@ -75,8 +75,16 @@
     tbody tr:nth-child(even) { background:#fcfdfe; }
     tbody tr:hover { background:var(--accent-soft); }
     tr:last-child td { border-bottom:none; }
-    #acctTable th:first-child, #acctTable td:first-child { min-width:230px; white-space:normal; }
+    /* Column widths for the Accounts table so dropdowns and notes show in full.
+       Order: 1 Account, 2 Type, 3 Balance, 4 Paid, 5 Remaining, 6 Min/Due,
+              7 Due date, 8 APR, 9 Limit, 10 Util, 11 Status, 12 Note, 13 delete */
+    #acctTable th:nth-child(1), #acctTable td:nth-child(1) { min-width:210px; white-space:normal; }
+    #acctTable th:nth-child(2), #acctTable td:nth-child(2) { min-width:120px; }
+    #acctTable th:nth-child(11), #acctTable td:nth-child(11) { min-width:120px; }
+    #acctTable th:nth-child(12), #acctTable td:nth-child(12) { min-width:260px; white-space:normal; }
     #acctTable td:last-child, #acctTable th:last-child { width:1%; }
+    /* Ensure select controls are wide enough to show their full option text */
+    #acctTable select { min-width:104px; }
     input, select {
         width:100%; min-width:60px; border:1px solid transparent; background:transparent; border-radius:5px;
         padding:6px 8px; font-size:.84rem; color:var(--ink); font-family:inherit;
