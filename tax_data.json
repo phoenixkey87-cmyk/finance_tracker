@@ -1,12 +1,11 @@
 {
-  "dataVersion": 20260926,
+  "dataVersion": 20260927,
   "taxYear": 2026,
   "mileageRate": 0.70,
   "businesses": [
     "LM Enterprises (LLC)",
     "Phoenix Travel",
-    "Ascendix Studio",
-    "Business 3"
+    "Ascendix Studio"
   ],
   "expenses": [
     { "date": "2026-09-24", "business": "Ascendix Studio", "category": "Software/Subscriptions", "amount": 20.00, "note": "Example - ChatGPT subscription" }

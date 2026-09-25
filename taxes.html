@@ -196,7 +196,7 @@ function catPct(name){ const c = CATEGORIES.find(c=>c.name===name); return c?c.p
 
 function seed(){
     return { dataVersion:0, taxYear:new Date().getFullYear(), mileageRate:0.70,
-        businesses:['LM Enterprises (LLC)','Phoenix Travel','Ascendix Studio','Business 3'],
+        businesses:['LM Enterprises (LLC)','Phoenix Travel','Ascendix Studio'],
         expenses:[], mileage:[] };
 }
 let data = load();
