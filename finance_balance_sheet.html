@@ -119,6 +119,17 @@
 
     .progress { height:8px; border-radius:4px; background:var(--line); overflow:hidden; margin-top:9px; }
     .progress > span { display:block; height:100%; background:var(--good); }
+    .investgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px; padding:18px 20px; }
+    .invest-card {
+        border:1px solid var(--line); border-radius:10px; padding:16px; background:#fff;
+        border-left:4px solid var(--accent); display:flex; flex-direction:column; gap:4px;
+    }
+    .invest-card .ic-name { font-weight:700; font-size:.86rem; line-height:1.3; }
+    .invest-card .ic-bal { font-size:1.5rem; font-weight:800; letter-spacing:-.4px; margin-top:6px; color:var(--ink); }
+    .invest-card .ic-meta { font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .invest-card .ic-contrib { font-size:.74rem; color:var(--good); font-weight:600; margin-top:6px; }
+    .invest-card.total { background:var(--accent-soft); border-left-color:var(--good); }
+    .invest-card.total .ic-bal { color:var(--good); }
     .goalgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; padding:18px 20px; }
     .goal { border:1px solid var(--line); border-radius:8px; padding:16px; background:#fff; }
     .goal .g-title { font-weight:700; font-size:.9rem; }
@@ -209,20 +220,7 @@
 
     <div class="panel">
         <h2>Investments &amp; Retirement <span class="hint" id="investHint">Brokerage, 401(k), and other holdings.</span></h2>
-        <div class="tablewrap">
-            <table id="investTable">
-                <thead>
-                    <tr>
-                        <th>Account</th>
-                        <th class="num">Balance</th>
-                        <th class="num">Monthly contribution</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="investBody"></tbody>
-                <tfoot id="investFoot"></tfoot>
-            </table>
-        </div>
+        <div class="investgrid" id="investGrid"></div>
     </div>
 
     <div class="panel">
@@ -672,29 +670,35 @@ function utilCell(a){
 }
 
 function renderInvestments(){
-    const body = document.getElementById('investBody');
-    if(!body) return;
-    const list = data.accounts.map((a,i)=>({a,i})).filter(o=>isInvestment(o.a));
-    if(!list.length){ body.innerHTML='<tr><td colspan="4" class="note">No investment accounts. Set an account\u2019s type to “Investment” to list it here.</td></tr>'; document.getElementById('investFoot').innerHTML=''; return; }
+    const grid = document.getElementById('investGrid');
+    if(!grid) return;
+    const list = data.accounts.map((a,i)=>({a,i})).filter(o=>isInvestment(o.a))
+        .sort((x,y)=>num(y.a.balance)-num(x.a.balance));
+    if(!list.length){
+        grid.innerHTML='<div class="note" style="grid-column:1/-1;">No investment accounts. Set an account\u2019s type to “Investment” to list it here.</div>';
+        return;
+    }
     const perYear = data.income ? (num(data.income.checksPerYear)||26) : 26;
     let totBal=0, totContrib=0;
-    body.innerHTML = list.map(({a,i})=>{
+    const cards = list.map(({a,i})=>{
         const bal = num(a.balance);
         const contribM = num(a.contribPerMonth) + num(a.contribPerCheck)*perYear/12 + monthlyDraft(a);
         totBal += bal; totContrib += contribM;
-        return `<tr>
-            <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
-            <td class="num">${cell(a.balance,`oninput="upd(${i},'balance',this.value)"`,{num:true})}</td>
-            <td class="num">${contribM>0?money(contribM):'—'}</td>
-            <td style="text-align:center;">${noteDot(a,i)}</td>
-        </tr>`;
+        const note = (a.note||'').trim();
+        return `<div class="invest-card">
+            <div class="ic-name">${a.name}</div>
+            <div class="ic-bal">${money(bal)}</div>
+            ${contribM>0?`<div class="ic-contrib">+ ${money(contribM)}/mo contributed</div>`:''}
+            ${note?`<div class="ic-meta">${note.replace(/</g,'&lt;')}</div>`:''}
+        </div>`;
     }).join('');
-    document.getElementById('investFoot').innerHTML = `<tr>
-        <td>Total invested</td>
-        <td class="num">${money(totBal)}</td>
-        <td class="num">${totContrib>0?money(totContrib)+' /mo':''}</td>
-        <td></td>
-    </tr>`;
+    const totalCard = `<div class="invest-card total">
+        <div class="ic-name">Total invested</div>
+        <div class="ic-bal">${money(totBal)}</div>
+        ${totContrib>0?`<div class="ic-contrib">+ ${money(totContrib)}/mo across accounts</div>`:''}
+        <div class="ic-meta">${list.length} accounts</div>
+    </div>`;
+    grid.innerHTML = totalCard + cards;
     const hint = document.getElementById('investHint');
     if(hint) hint.textContent = list.length+' accounts • '+money(totBal)+' total';
 }
