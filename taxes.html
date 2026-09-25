@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Taxes &amp; Expenses</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23155e40'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-family='Segoe UI,Arial,sans-serif' font-size='34' font-weight='700' fill='%23ffffff'%3E%25%3C/text%3E%3C/svg%3E">
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+        --card:#fff; --ink:#1f2733; --muted:#64748b; --faint:#94a3b8;
+        --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+        --accent:#155e40; --accent-soft:#e9f4ee;
+        --line:#e5e9f0; --soft:#f8fafc; --page:#eef2f0;
+    }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+        background:var(--page); min-height:100vh; color:var(--ink); font-size:14px; line-height:1.45; }
+    .wrap { max-width:1500px; margin:0 auto; padding:0 24px 64px; }
+    header.top { display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between;
+        background:var(--accent); color:#fff; padding:18px 24px; margin:0 -24px 24px; border-bottom:3px solid #0e3f2b; }
+    header.top h1 { font-size:1.3rem; font-weight:700; }
+    header.top .sub { color:rgba(255,255,255,.75); font-size:.8rem; margin-top:3px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
+    button { border:1px solid transparent; border-radius:6px; padding:9px 14px; font-size:.82rem;
+        font-weight:600; cursor:pointer; background:#fff; color:var(--accent); }
+    button:hover { background:var(--soft); }
+    button.primary { background:#1f7a54; color:#fff; }
+    button.ghost { background:transparent; color:#fff; border-color:rgba(255,255,255,.4); }
+    button.ghost:hover { background:rgba(255,255,255,.12); }
+    button.danger { background:#fef2f2; color:var(--bad); border-color:#f3d0d0; }
+    a.navlink { color:#fff; text-decoration:none; font-weight:700; font-size:.85rem;
+        border:1px solid rgba(255,255,255,.4); border-radius:6px; padding:9px 14px; }
+    a.navlink:hover { background:rgba(255,255,255,.12); }
+
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .stat { background:var(--card); border-radius:8px; padding:18px 20px; border:1px solid var(--line); box-shadow:0 1px 2px rgba(16,24,40,.04); }
+    .stat .label { font-size:.7rem; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:700; }
+    .stat .value { font-size:1.5rem; font-weight:700; margin-top:8px; color:var(--ink); }
+    .stat .value.good { color:var(--good); }
+    .stat .note { font-size:.72rem; color:var(--faint); margin-top:6px; }
+
+    .panel { background:var(--card); border-radius:8px; border:1px solid var(--line); box-shadow:0 1px 2px rgba(16,24,40,.04); margin-bottom:24px; overflow:hidden; }
+    .panel h2 { font-size:.95rem; font-weight:700; padding:15px 20px; display:flex; justify-content:space-between;
+        align-items:center; gap:12px; flex-wrap:wrap; background:var(--soft); border-bottom:1px solid var(--line); }
+    .panel h2 .hint { font-size:.74rem; color:var(--muted); font-weight:400; }
+
+    .filterbar { display:flex; flex-wrap:wrap; gap:8px; padding:14px 20px 4px; }
+    .chip { border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:999px;
+        padding:6px 14px; font-size:.78rem; font-weight:600; cursor:pointer; }
+    .chip:hover { background:var(--soft); }
+    .chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+    .tablewrap { overflow-x:auto; }
+    table { width:100%; border-collapse:separate; border-spacing:0; font-size:.84rem; }
+    th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap; }
+    th { font-size:.68rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:700;
+        background:var(--soft); border-bottom:2px solid var(--line); }
+    td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+    td { font-variant-numeric:tabular-nums; }
+    tbody tr:nth-child(even) { background:#fcfdfe; }
+    tbody tr:hover { background:var(--accent-soft); }
+    tfoot td { font-weight:700; background:var(--soft); border-top:2px solid var(--line); }
+    input, select { width:100%; min-width:70px; border:1px solid transparent; background:transparent; border-radius:5px;
+        padding:6px 8px; font-size:.84rem; color:var(--ink); font-family:inherit; }
+    input:hover, select:hover { border-color:var(--line); }
+    input:focus, select:focus { outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 2px rgba(21,94,64,.12); }
+    input.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .row-actions button { padding:5px 9px; font-size:.78rem; }
+    .add-row { padding:14px 20px; }
+    .breakdown { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; padding:18px 20px; }
+    .bd-card { border:1px solid var(--line); border-radius:8px; padding:14px; border-left:4px solid var(--accent); }
+    .bd-card .t { font-weight:700; font-size:.86rem; }
+    .bd-card .v { font-size:1.3rem; font-weight:800; margin-top:4px; }
+    .bd-card .m { font-size:.74rem; color:var(--muted); margin-top:2px; }
+    .footer-note { color:var(--muted); font-size:.78rem; text-align:center; margin-top:8px; line-height:1.6; }
+    .disclaimer { background:#fffbeb; border:1px solid #fde68a; color:#92600a; border-radius:8px; padding:12px 16px; font-size:.78rem; margin-bottom:24px; }
+    @media (max-width:640px){ .wrap{ padding:0 14px 56px; } header.top{ margin:0 -14px 20px; padding:16px 14px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <div>
+            <h1>Business Taxes &amp; Expenses</h1>
+            <div class="sub">Track deductible expenses and mileage across your businesses. Tax year <span id="taxYearLabel"></span>.</div>
+        </div>
+        <div class="toolbar">
+            <a class="navlink" href="finance_balance_sheet.html">← Balance Sheet</a>
+            <button class="primary" onclick="addExpense()">+ Expense</button>
+            <button class="primary" onclick="addMileage()">+ Mileage</button>
+            <button class="ghost" onclick="reloadFromRepo()">↻ Reload</button>
+            <button class="ghost" onclick="exportJSON()">⬇ Export</button>
+            <button class="ghost" onclick="document.getElementById('importFile').click()">⬆ Import</button>
+            <button class="ghost" onclick="exportCSV()">⬇ CSV</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+        </div>
+    </header>
+
+    <div class="disclaimer">
+        <b>Note:</b> This tool helps you organize and estimate business expenses. It is not tax advice.
+        Deductibility rules (meals, home office, mileage vs. actual costs, etc.) vary — confirm with a tax professional or the IRS before filing.
+    </div>
+
+    <div class="cards" id="statCards"></div>
+
+    <div class="panel">
+        <h2>Expenses <span class="hint">Filter by business. Tap any cell to edit.</span></h2>
+        <div class="filterbar" id="bizFilter"></div>
+        <div class="tablewrap">
+            <table id="expTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Business</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th class="num">Amount</th>
+                        <th class="num">Deductible</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="expBody"></tbody>
+                <tfoot id="expFoot"></tfoot>
+            </table>
+        </div>
+        <div class="add-row"><button onclick="addExpense()">+ Add expense</button></div>
+    </div>
+
+    <div class="panel">
+        <h2>Mileage <span class="hint" id="mileHint">Business miles × IRS standard rate.</span></h2>
+        <div class="tablewrap">
+            <table id="mileTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Business</th>
+                        <th class="num">Miles</th>
+                        <th>Purpose</th>
+                        <th class="num">Deduction</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="mileBody"></tbody>
+                <tfoot id="mileFoot"></tfoot>
+            </table>
+        </div>
+        <div class="add-row"><button onclick="addMileage()">+ Add mileage</button></div>
+    </div>
+
+    <div class="panel">
+        <h2>By Business <span class="hint">Total deductible per business (expenses + mileage).</span></h2>
+        <div class="breakdown" id="byBusiness"></div>
+    </div>
+
+    <div class="panel">
+        <h2>By Category <span class="hint">Where the deductible spending goes.</span></h2>
+        <div class="tablewrap">
+            <table id="catTable">
+                <thead><tr><th>Category</th><th class="num">Total</th><th class="num">Deductible</th><th class="num">% of total</th></tr></thead>
+                <tbody id="catBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        Data saves in this browser and syncs from <b>tax_data.json</b> in your repo.
+        Export and commit that file to keep phone &amp; desktop in sync.
+        <div id="saveFlag" style="color:var(--faint);font-size:.72rem;margin-top:4px;"></div>
+    </div>
+</div>
+
+<script>
+const STORE_KEY = 'financeTaxTracker_v1';
+const money = n => (isNaN(n)?0:n).toLocaleString('en-US',{style:'currency',currency:'USD'});
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; };
+
+// Categories and their default deductible treatment.
+// pct = deductible percentage (meals are 50% by the general rule).
+const CATEGORIES = [
+    { name:'Hotels/Lodging', pct:100 },
+    { name:'Flights/Airfare', pct:100 },
+    { name:'Gas/Fuel', pct:100 },
+    { name:'Meals', pct:50 },
+    { name:'Supplies', pct:100 },
+    { name:'Software/Subscriptions', pct:100 },
+    { name:'Equipment', pct:100 },
+    { name:'Advertising/Marketing', pct:100 },
+    { name:'Office/Rent', pct:100 },
+    { name:'Professional Services', pct:100 },
+    { name:'Insurance', pct:100 },
+    { name:'Utilities', pct:100 },
+    { name:'Travel (other)', pct:100 },
+    { name:'Other', pct:100 }
+];
+function catPct(name){ const c = CATEGORIES.find(c=>c.name===name); return c?c.pct:100; }
+
+function seed(){
+    return { dataVersion:0, taxYear:new Date().getFullYear(), mileageRate:0.70,
+        businesses:['LM Enterprises (LLC)','Business 2','Business 3','Business 4'],
+        expenses:[], mileage:[] };
+}
+let data = load();
+let bizFilter = 'all';
+
+function load(){ try { const r = localStorage.getItem(STORE_KEY); if(r) return JSON.parse(r); } catch(e){} return seed(); }
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    const f=document.getElementById('saveFlag'); if(f) f.textContent='Saved '+new Date().toLocaleTimeString(); }
+
+function expDeductible(e){ return num(e.amount) * catPct(e.category)/100; }
+function mileDeduction(m){ return num(m.miles) * num(data.mileageRate); }
+function matchesBiz(x){ return bizFilter==='all' || x.business===bizFilter; }
+
+function render(){
+    document.getElementById('taxYearLabel').textContent = data.taxYear || '';
+    document.getElementById('mileHint').textContent = 'Business miles × $'+num(data.mileageRate).toFixed(2)+'/mi (IRS standard rate).';
+    renderStats(); renderFilter(); renderExpenses(); renderMileage(); renderByBusiness(); renderByCategory();
+    save();
+}
+
+function renderStats(){
+    const expTotal = data.expenses.reduce((s,e)=>s+num(e.amount),0);
+    const expDed = data.expenses.reduce((s,e)=>s+expDeductible(e),0);
+    const mileDed = data.mileage.reduce((s,m)=>s+mileDeduction(m),0);
+    const totalDed = expDed + mileDed;
+    const miles = data.mileage.reduce((s,m)=>s+num(m.miles),0);
+    const cards = [
+        { label:'Total expenses', value:money(expTotal), note:data.expenses.length+' entries' },
+        { label:'Mileage deduction', value:money(mileDed), note:miles.toLocaleString()+' business miles' },
+        { label:'Total deductible', value:money(totalDed), cls:'good', note:'Expenses + mileage' },
+        { label:'Businesses', value:String(data.businesses.length), note:'Tracked entities' }
+    ];
+    document.getElementById('statCards').innerHTML = cards.map(c=>`
+        <div class="stat"><div class="label">${c.label}</div>
+        <div class="value ${c.cls||''}">${c.value}</div><div class="note">${c.note}</div></div>`).join('');
+}
+
+function renderFilter(){
+    const bar = document.getElementById('bizFilter');
+    const chips = ['all', ...data.businesses];
+    bar.innerHTML = chips.map(b=>`<button class="chip ${bizFilter===b?'active':''}" onclick="setBizFilter('${b.replace(/'/g,"\\'")}')">${b==='all'?'All':b}</button>`).join('');
+}
+function setBizFilter(b){ bizFilter=b; renderFilter(); renderExpenses(); renderMileage(); }
+
+function bizOptions(sel){ return data.businesses.map(b=>`<option ${b===sel?'selected':''}>${b}</option>`).join(''); }
+function catOptions(sel){ return CATEGORIES.map(c=>`<option ${c.name===sel?'selected':''}>${c.name}</option>`).join(''); }
+function cell(v,on,opts={}){ const cls=opts.num?'num':''; const t=opts.type||'text';
+    return `<input class="${cls}" type="${t}" value="${v==null?'':String(v).replace(/"/g,'&quot;')}" ${on}>`; }
+
+function renderExpenses(){
+    const body = document.getElementById('expBody');
+    const rows = data.expenses.map((e,i)=>({e,i})).filter(o=>matchesBiz(o.e));
+    if(!rows.length){ body.innerHTML='<tr><td colspan="7" style="color:var(--faint)">No expenses yet. Click “Add expense”.</td></tr>'; document.getElementById('expFoot').innerHTML=''; return; }
+    body.innerHTML = rows.map(({e,i})=>`
+        <tr>
+            <td>${cell(e.date,`oninput="updExp(${i},'date',this.value)"`,{type:'date'})}</td>
+            <td><select onchange="updExp(${i},'business',this.value)">${bizOptions(e.business)}</select></td>
+            <td><select onchange="updExp(${i},'category',this.value)">${catOptions(e.category)}</select></td>
+            <td>${cell(e.note,`oninput="updExp(${i},'note',this.value)"`)}</td>
+            <td class="num">${cell(e.amount,`oninput="updExp(${i},'amount',this.value)"`,{num:true})}</td>
+            <td class="num">${money(expDeductible(e))}${catPct(e.category)!==100?` <span style="color:var(--muted);font-size:.7rem">(${catPct(e.category)}%)</span>`:''}</td>
+            <td class="row-actions"><button class="danger" onclick="delExp(${i})">✕</button></td>
+        </tr>`).join('');
+    const tot = rows.reduce((s,o)=>s+num(o.e.amount),0);
+    const ded = rows.reduce((s,o)=>s+expDeductible(o.e),0);
+    document.getElementById('expFoot').innerHTML = `<tr><td colspan="4">Totals${bizFilter!=='all'?' ('+bizFilter+')':''}</td>
+        <td class="num">${money(tot)}</td><td class="num">${money(ded)}</td><td></td></tr>`;
+}
+
+function renderMileage(){
+    const body = document.getElementById('mileBody');
+    const rows = data.mileage.map((m,i)=>({m,i})).filter(o=>matchesBiz(o.m));
+    if(!rows.length){ body.innerHTML='<tr><td colspan="6" style="color:var(--faint)">No mileage yet. Click “Add mileage”.</td></tr>'; document.getElementById('mileFoot').innerHTML=''; return; }
+    body.innerHTML = rows.map(({m,i})=>`
+        <tr>
+            <td>${cell(m.date,`oninput="updMile(${i},'date',this.value)"`,{type:'date'})}</td>
+            <td><select onchange="updMile(${i},'business',this.value)">${bizOptions(m.business)}</select></td>
+            <td class="num">${cell(m.miles,`oninput="updMile(${i},'miles',this.value)"`,{num:true})}</td>
+            <td>${cell(m.purpose,`oninput="updMile(${i},'purpose',this.value)"`)}</td>
+            <td class="num">${money(mileDeduction(m))}</td>
+            <td class="row-actions"><button class="danger" onclick="delMile(${i})">✕</button></td>
+        </tr>`).join('');
+    const miles = rows.reduce((s,o)=>s+num(o.m.miles),0);
+    const ded = rows.reduce((s,o)=>s+mileDeduction(o.m),0);
+    document.getElementById('mileFoot').innerHTML = `<tr><td colspan="2">Totals${bizFilter!=='all'?' ('+bizFilter+')':''}</td>
+        <td class="num">${miles.toLocaleString()}</td><td></td><td class="num">${money(ded)}</td><td></td></tr>`;
+}
+
+function renderByBusiness(){
+    const grid = document.getElementById('byBusiness');
+    grid.innerHTML = data.businesses.map(b=>{
+        const exp = data.expenses.filter(e=>e.business===b).reduce((s,e)=>s+expDeductible(e),0);
+        const mile = data.mileage.filter(m=>m.business===b).reduce((s,m)=>s+mileDeduction(m),0);
+        const total = exp+mile;
+        return `<div class="bd-card"><div class="t">${b}</div>
+            <div class="v">${money(total)}</div>
+            <div class="m">Expenses ${money(exp)} + mileage ${money(mile)}</div></div>`;
+    }).join('');
+}
+
+function renderByCategory(){
+    const body = document.getElementById('catBody');
+    const totalAll = data.expenses.reduce((s,e)=>s+num(e.amount),0) || 1;
+    const byCat = {};
+    data.expenses.forEach(e=>{ (byCat[e.category]=byCat[e.category]||{t:0,d:0}); byCat[e.category].t+=num(e.amount); byCat[e.category].d+=expDeductible(e); });
+    const keys = Object.keys(byCat).sort((a,b)=>byCat[b].t-byCat[a].t);
+    if(!keys.length){ body.innerHTML='<tr><td colspan="4" style="color:var(--faint)">No expenses yet.</td></tr>'; return; }
+    body.innerHTML = keys.map(k=>`<tr><td>${k}</td><td class="num">${money(byCat[k].t)}</td>
+        <td class="num">${money(byCat[k].d)}</td><td class="num">${(byCat[k].t/totalAll*100).toFixed(0)}%</td></tr>`).join('');
+}
+
+function updExp(i,f,v){ data.expenses[i][f] = f==='amount'?num(v):v; renderStats(); renderExpenses(); renderByBusiness(); renderByCategory(); save(); }
+function updMile(i,f,v){ data.mileage[i][f] = f==='miles'?num(v):v; renderStats(); renderMileage(); renderByBusiness(); save(); }
+function addExpense(){ data.expenses.unshift({date:new Date().toISOString().slice(0,10), business:data.businesses[0], category:'Other', amount:0, note:''}); render(); }
+function delExp(i){ data.expenses.splice(i,1); render(); }
+function addMileage(){ data.mileage.unshift({date:new Date().toISOString().slice(0,10), business:data.businesses[0], miles:0, purpose:''}); render(); }
+function delMile(i){ data.mileage.splice(i,1); render(); }
+
+function exportJSON(){ downloadBlob(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),'tax_data.json'); }
+function exportCSV(){
+    const head=['Type','Date','Business','Category/Purpose','Amount/Miles','Deductible'];
+    const eRows=data.expenses.map(e=>['Expense',e.date,e.business,e.category,num(e.amount),expDeductible(e)]);
+    const mRows=data.mileage.map(m=>['Mileage',m.date,m.business,m.purpose,num(m.miles),mileDeduction(m)]);
+    const csv=[head,...eRows,...mRows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    downloadBlob(new Blob([csv],{type:'text/csv'}),'business_expenses.csv');
+}
+function downloadBlob(b,n){ const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=n; a.click(); URL.revokeObjectURL(u); }
+function importJSON(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+    r.onload=()=>{ try{ const p=JSON.parse(r.result); if(p.expenses&&p.businesses){ if(!p.mileage)p.mileage=[]; data=p; render(); alert('Imported.'); } else alert('Not a tax data file.'); }catch(err){ alert('Could not read: '+err.message); } };
+    r.readAsText(f); e.target.value=''; }
+
+async function reloadFromRepo(){
+    if(!confirm('Reload the latest tax data from the repo? Replaces what is shown in this browser.')) return;
+    try { const res=await fetch('tax_data.json?ts='+Date.now(),{cache:'no-store'});
+        if(!res.ok){ alert('Could not reach tax_data.json (HTTP '+res.status+').'); return; }
+        const j=await res.json(); if(j.expenses&&j.businesses){ if(!j.mileage)j.mileage=[]; data=j; render(); alert('Loaded latest from repo.'); }
+    } catch(e){ alert('Reload failed: '+e.message); }
+}
+
+// Auto-sync from repo when its dataVersion is newer than the local copy.
+(async function autoSync(){
+    let local=null; try{ const r=localStorage.getItem(STORE_KEY); if(r) local=JSON.parse(r); }catch(e){}
+    try {
+        const res=await fetch('tax_data.json?ts='+Date.now(),{cache:'no-store'});
+        if(res.ok){ const repo=await res.json();
+            if(repo&&repo.expenses&&repo.businesses){
+                const rv=Number(repo.dataVersion)||0, lv=Number(local&&local.dataVersion)||0;
+                if(!local || rv>lv){ if(!repo.mileage)repo.mileage=[]; data=repo; save(); render(); return; }
+            }
+        }
+    } catch(e){}
+    render();
+})();
+</script>
+</body>
+</html>
