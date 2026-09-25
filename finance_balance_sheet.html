@@ -75,16 +75,37 @@
     tbody tr:nth-child(even) { background:#fcfdfe; }
     tbody tr:hover { background:var(--accent-soft); }
     tr:last-child td { border-bottom:none; }
-    /* Column widths for the Accounts table so dropdowns and notes show in full.
-       Order: 1 Account, 2 Type, 3 Balance, 4 Paid, 5 Remaining, 6 Min/Due,
-              7 Due date, 8 APR, 9 Limit, 10 Util, 11 Status, 12 Note, 13 delete */
-    #acctTable th:nth-child(1), #acctTable td:nth-child(1) { min-width:210px; white-space:normal; }
-    #acctTable th:nth-child(2), #acctTable td:nth-child(2) { min-width:120px; }
-    #acctTable th:nth-child(11), #acctTable td:nth-child(11) { min-width:120px; }
-    #acctTable th:nth-child(12), #acctTable td:nth-child(12) { min-width:260px; white-space:normal; }
+    /* Accounts table: slightly smaller type so more fits across without scrolling */
+    #acctTable { font-size:.78rem; }
+    #acctTable th, #acctTable td { padding:9px 10px; }
+    #acctTable input, #acctTable select { font-size:.78rem; padding:5px 6px; }
+    /* Column widths. Order: 1 Account, 2 Type, 3 Balance, 4 Paid, 5 Remaining,
+       6 Min/Due, 7 Due date, 8 APR, 9 Limit, 10 Util, 11 Status, 12 Note, 13 delete */
+    #acctTable th:nth-child(1), #acctTable td:nth-child(1) { min-width:190px; white-space:normal; }
+    #acctTable th:nth-child(2), #acctTable td:nth-child(2) { min-width:108px; }
+    #acctTable th:nth-child(11), #acctTable td:nth-child(11) { min-width:110px; }
+    #acctTable th:nth-child(12), #acctTable td:nth-child(12) { width:1%; text-align:center; }
     #acctTable td:last-child, #acctTable th:last-child { width:1%; }
-    /* Ensure select controls are wide enough to show their full option text */
-    #acctTable select { min-width:104px; }
+    #acctTable select { min-width:98px; }
+
+    /* Note shown as a small hover indicator instead of a wide column */
+    .note-dot {
+        display:inline-flex; align-items:center; justify-content:center;
+        width:20px; height:20px; border-radius:50%; cursor:default;
+        background:var(--accent-soft); color:var(--accent); font-size:.7rem; font-weight:700;
+        border:1px solid var(--line); position:relative;
+    }
+    .note-dot[data-note]:hover::after {
+        content:attr(data-note); position:absolute; z-index:20; left:50%; top:calc(100% + 8px);
+        transform:translateX(-50%); width:max-content; max-width:280px; white-space:normal;
+        background:#111827; color:#fff; padding:8px 10px; border-radius:6px; font-size:.74rem;
+        font-weight:400; line-height:1.4; text-align:left; box-shadow:0 6px 20px rgba(0,0,0,.25);
+    }
+    .note-dot[data-note]:hover::before {
+        content:''; position:absolute; z-index:20; left:50%; top:calc(100% + 3px);
+        transform:translateX(-50%); border:5px solid transparent; border-bottom-color:#111827;
+    }
+    .note-dot.empty { background:transparent; color:var(--faint); border-style:dashed; }
     input, select {
         width:100%; min-width:60px; border:1px solid transparent; background:transparent; border-radius:5px;
         padding:6px 8px; font-size:.84rem; color:var(--ink); font-family:inherit;
@@ -542,6 +563,23 @@ function renderStats() {
         </div>`).join('');
 }
 
+function noteDot(a, i){
+    const note = (a.note||'').trim();
+    const safe = note.replace(/"/g,'&quot;');
+    if(note){
+        return `<span class="note-dot" data-note="${safe}" title="Click to edit note" onclick="editNote(${i})">i</span>`;
+    }
+    return `<span class="note-dot empty" title="Add a note" onclick="editNote(${i})">+</span>`;
+}
+
+function editNote(i){
+    const cur = data.accounts[i].note || '';
+    const v = prompt('Note for '+data.accounts[i].name+':', cur);
+    if(v===null) return; // cancelled
+    data.accounts[i].note = v;
+    renderAccounts(); save();
+}
+
 function cell(value, onInput, opts={}) {
     const cls = opts.num ? 'num' : '';
     const type = opts.type || 'text';
@@ -570,7 +608,7 @@ function renderAccounts() {
             <td>
                 <select class="status" style="color:${STATUS_COLOR[a.status]||'#1a2330'}" onchange="upd(${i},'status',this.value)">${statusOpts}</select>
             </td>
-            <td>${cell(a.note,`oninput="upd(${i},'note',this.value)"`)}</td>
+            <td style="text-align:center;">${noteDot(a,i)}</td>
             <td class="row-actions"><button class="danger" onclick="delAccount(${i})">✕</button></td>
         </tr>`;
     }).join('');
