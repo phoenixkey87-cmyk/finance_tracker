@@ -15,7 +15,11 @@
     { "name": "Mortgage - 740 Liberty Village Dr (NAF *4395)", "type": "Loan", "balance": 94428.10, "paid": 0, "min": 925.90, "due": "2026-10-01", "apr": 3.875, "pay": 925.90, "note": "FHA 30yr, escrow $411.60/mo incl. Autopay OFF.", "status": "Current" },
     { "name": "Home Equity - 740 Liberty Village Dr (asset)", "type": "Other", "balance": 174000, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Est. market value; mortgage tracked separately", "status": "Current" },
     { "name": "Primerica Investment *2538 (Franklin Growth FKGRX)", "type": "Other", "balance": 458.88, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "TOD account; 3.134 shares. Rep: Julia Tate", "status": "Current" },
-    { "name": "Robinhood Brokerage (Individual)", "type": "Other", "balance": 2248.36, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Diversified stocks + LTC. Funded via checking ACH.", "status": "Current" }
+    { "name": "Robinhood Brokerage (Individual)", "type": "Other", "balance": 2248.36, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Diversified stocks + LTC. Funded via checking ACH.", "status": "Current" },
+    { "name": "Charter 401(k) *8510", "type": "Other", "balance": 74084.57, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Fidelity NetBenefits. Contributing 6%.", "status": "Current" },
+    { "name": "Charter Retirement Accumulation Plan *9427", "type": "Other", "balance": 30275.72, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Fidelity NetBenefits", "status": "Current" },
+    { "name": "Charter ESPP RSU Match", "type": "Other", "balance": 86.52, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Restricted Stock Units", "status": "Current" },
+    { "name": "Charter Individual TOD Brokerage *2844", "type": "Other", "balance": 84.40, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Fidelity brokerage", "status": "Current" }
   ],
   "goals": [
     { "title": "Pay down Ollo Platinum", "target": 0, "current": 2922.37, "kind": "debt" },
