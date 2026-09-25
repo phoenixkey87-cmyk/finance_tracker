@@ -11,7 +11,9 @@
     { "name": "Auto Insurance *0759 (Private Passenger, monthly)", "type": "Bill", "balance": 117.85, "paid": 0, "min": 117.85, "due": "2026-09-25", "apr": 0, "status": "Autopay" },
     { "name": "Flex Pay HELOC *0002", "type": "Loan", "balance": 13624.26, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" },
     { "name": "MOHELA Student Loan (Chase Undergrad *2464)", "type": "Loan", "balance": 12280.28, "paid": 0, "min": 0, "due": "2026-10-07", "apr": 13.25, "pay": 135, "status": "Current" },
-    { "name": "Global Holdings LLC (debt settlement escrow) *4402", "type": "Savings", "balance": 1673.43, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" }
+    { "name": "Global Holdings LLC (debt settlement escrow) *4402", "type": "Savings", "balance": 1673.43, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" },
+    { "name": "Mortgage - 740 Liberty Village Dr (NAF *4395)", "type": "Loan", "balance": 94428.10, "paid": 0, "min": 925.90, "due": "2026-10-01", "apr": 3.875, "pay": 925.90, "note": "FHA 30yr, escrow $411.60/mo incl. Autopay OFF.", "status": "Current" },
+    { "name": "Home Equity - 740 Liberty Village Dr (asset)", "type": "Other", "balance": 174000, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Est. market value; mortgage tracked separately", "status": "Current" }
   ],
   "goals": [
     { "title": "Pay down Ollo Platinum", "target": 0, "current": 2922.37, "kind": "debt" },

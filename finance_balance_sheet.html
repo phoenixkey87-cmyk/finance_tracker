@@ -229,6 +229,7 @@ function save() {
 function remaining(a){ return Math.max(0, num(a.balance) - num(a.paid)); }
 function isDebt(a){ return ['Credit Card','Loan'].includes(a.type); }
 function isAsset(a){ return ['Checking','Savings'].includes(a.type); }
+function isProperty(a){ return a.type==='Other' && num(a.balance)>0; }
 
 function render() {
     renderStats();
@@ -242,18 +243,19 @@ function render() {
 function renderStats() {
     const debtRemaining = data.accounts.filter(isDebt).reduce((s,a)=>s+remaining(a),0);
     const totalPaid = data.accounts.filter(isDebt).reduce((s,a)=>s+num(a.paid),0);
-    const assets = data.accounts.filter(isAsset).reduce((s,a)=>s+num(a.balance),0);
-    const netWorth = assets - debtRemaining;
+    const cash = data.accounts.filter(isAsset).reduce((s,a)=>s+num(a.balance),0);
+    const property = data.accounts.filter(isProperty).reduce((s,a)=>s+num(a.balance),0);
+    const netWorth = cash + property - debtRemaining;
     const cards = data.accounts.filter(a=>a.type==='Credit Card' && num(a.limit));
     const ccBal = cards.reduce((s,a)=>s+remaining(a),0);
     const ccLimit = cards.reduce((s,a)=>s+num(a.limit),0);
     const util = ccLimit>0 ? ccBal/ccLimit*100 : 0;
     const utilCls = util>=50?'bad':(util>=30?'':'good');
     const statCardsData = [
-        { label:'Total debt remaining', value:money(debtRemaining), cls:'bad', note:'Lower is better' },
-        { label:'Paid toward debt', value:money(totalPaid), cls:'good', note:'Progress this cycle' },
-        { label:'Cash (checking + savings)', value:money(assets), cls:'good', note:'Build this up' },
-        { label:'Net position', value:money(netWorth), cls:netWorth>=0?'good':'bad', note:'Assets − debt' },
+        { label:'Total debt remaining', value:money(debtRemaining), cls:'bad', note:'Incl. mortgage. Lower is better' },
+        { label:'Cash (checking + savings)', value:money(cash), cls:'good', note:'Build this up' },
+        { label:'Property / other assets', value:money(property), cls:'good', note:'Home value etc.' },
+        { label:'Net worth', value:money(netWorth), cls:netWorth>=0?'good':'bad', note:'Cash + property − all debt' },
         { label:'Card utilization', value: ccLimit>0?util.toFixed(0)+'%':'—', cls:utilCls, note:'Keep under 30% for credit' }
     ];
     document.getElementById('statCards').innerHTML = statCardsData.map(c=>`
