@@ -1,17 +1,17 @@
 {
-  "dataVersion": 20260925,
+  "dataVersion": 20260926,
   "taxYear": 2026,
   "mileageRate": 0.70,
   "businesses": [
     "LM Enterprises (LLC)",
-    "Business 2",
-    "Business 3",
-    "Business 4"
+    "Phoenix Travel",
+    "Ascendix Studio",
+    "Business 3"
   ],
   "expenses": [
-    { "date": "2026-09-24", "business": "LM Enterprises (LLC)", "category": "Software/Subscriptions", "amount": 20.00, "note": "Example - ChatGPT subscription" }
+    { "date": "2026-09-24", "business": "Ascendix Studio", "category": "Software/Subscriptions", "amount": 20.00, "note": "Example - ChatGPT subscription" }
   ],
   "mileage": [
-    { "date": "2026-09-15", "business": "LM Enterprises (LLC)", "miles": 120, "purpose": "Example - client site visit" }
+    { "date": "2026-09-15", "business": "Phoenix Travel", "miles": 120, "purpose": "Example - client meeting" }
   ]
 }
