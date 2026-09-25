@@ -185,7 +185,7 @@
                     <tr>
                         <th>Account</th>
                         <th>Type</th>
-                        <th class="num">Balance due</th>
+                        <th class="num">Balance</th>
                         <th class="num">Paid</th>
                         <th class="num">Remaining</th>
                         <th class="num">Min / Due</th>
@@ -359,6 +359,7 @@ function remaining(a){ return Math.max(0, num(a.balance) - num(a.paid)); }
 function isDebt(a){ return ['Credit Card','Loan'].includes(a.type); }
 function isAsset(a){ return ['Checking','Savings'].includes(a.type); }
 function isProperty(a){ return a.type==='Other' && num(a.balance)>0; }
+function isLiability(a){ return ['Credit Card','Loan','Bill'].includes(a.type); }
 
 function render() {
     renderStats();
@@ -598,13 +599,15 @@ function renderAccounts() {
                 </select>
             </td>
             <td class="num">${cell(a.balance,`oninput="upd(${i},'balance',this.value)"`,{num:true})}</td>
+            ${isLiability(a) ? `
             <td class="num">${cell(a.paid,`oninput="upd(${i},'paid',this.value)"`,{num:true})}</td>
             <td class="num"><b>${money(remaining(a))}</b></td>
             <td class="num">${cell(a.min,`oninput="upd(${i},'min',this.value)"`,{num:true})}</td>
             <td>${cell(a.due,`oninput="upd(${i},'due',this.value)"`,{type:'date'})}</td>
             <td class="num">${cell(a.apr,`oninput="upd(${i},'apr',this.value)"`,{num:true})}</td>
             <td class="num">${a.type==='Credit Card'?cell(a.limit,`oninput="upd(${i},'limit',this.value)"`,{num:true}):'—'}</td>
-            <td class="num">${utilCell(a)}</td>
+            <td class="num">${utilCell(a)}</td>` : `
+            <td class="asset-na" colspan="7" style="color:var(--faint);font-style:italic;text-align:center;">asset — nothing owed</td>`}
             <td>
                 <select class="status" style="color:${STATUS_COLOR[a.status]||'#1a2330'}" onchange="upd(${i},'status',this.value)">${statusOpts}</select>
             </td>
@@ -613,11 +616,12 @@ function renderAccounts() {
         </tr>`;
     }).join('');
 
-    const totBal = data.accounts.reduce((s,a)=>s+num(a.balance),0);
-    const totPaid = data.accounts.reduce((s,a)=>s+num(a.paid),0);
-    const totRem = data.accounts.reduce((s,a)=>s+remaining(a),0);
+    const liabs = data.accounts.filter(isLiability);
+    const totBal = liabs.reduce((s,a)=>s+num(a.balance),0);
+    const totPaid = liabs.reduce((s,a)=>s+num(a.paid),0);
+    const totRem = liabs.reduce((s,a)=>s+remaining(a),0);
     document.getElementById('acctFoot').innerHTML = `<tr>
-        <td colspan="2">Totals</td>
+        <td colspan="2">Liability totals</td>
         <td class="num">${money(totBal)}</td>
         <td class="num">${money(totPaid)}</td>
         <td class="num">${money(totRem)}</td>
