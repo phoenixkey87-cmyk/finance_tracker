@@ -1,5 +1,5 @@
 {
-  "dataVersion": 20261001,
+  "dataVersion": 20261002,
   "taxYear": 2026,
   "mileageRate": 0.70,
   "businesses": [
@@ -14,7 +14,7 @@
     { "date": "2026-09-03", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 528.80, "note": "SW STL<->Las Vegas, paid 9/3, travel 11/12-11/15. Conf BUWKAQ" },
     { "date": "2026-09-17", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 321.80, "note": "SW STL<->Miami (9/17-9/21). Conf CRQ35A" },
     { "date": "2026-07-20", "business": "Phoenix Travel", "category": "Hotels/Lodging", "amount": 1722.00, "note": "Grand Palladium Select & TRS Coral, Cancun (10/9-10/12). 2 TRS Jr Suites $771 ea + $180 airport transfers. Res 2833-5. Paid in full." },
-    { "date": "2026-08-03", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 444.24, "note": "United outbound STL->ORD->CUN (10/9). Paid Visa *1568. Cancun trip." },
+    { "date": "2026-08-03", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 444.24, "note": "United outbound STL->ORD->CUN (10/9). Conf OPZSZG. Paid Visa *1568. Cancun trip." },
     { "date": "2026-11-12", "business": "Phoenix Travel", "category": "Hotels/Lodging", "amount": 610.00, "note": "Flamingo Las Vegas (11/12-11/15). Conf N6KQ6. Room $388.16 + fees $149.85 + tax $71.99." },
     { "date": "2026-11-13", "business": "Phoenix Travel", "category": "Travel (other)", "amount": 298.00, "note": "Jeezy concert ticket, PH Live (11/13). Sec 207 Row A Seat 10. Vegas business trip." },
     { "date": "2026-04-29", "business": "Phoenix Travel", "category": "Flights/Airfare", "amount": 368.37, "note": "United PSP->DEN->STL, travel 7/26. Conf F249VV. Paid PayPal 4/29." }
