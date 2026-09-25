@@ -208,6 +208,24 @@
     </div>
 
     <div class="panel">
+        <h2>Investments &amp; Retirement <span class="hint" id="investHint">Brokerage, 401(k), and other holdings.</span></h2>
+        <div class="tablewrap">
+            <table id="investTable">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th class="num">Balance</th>
+                        <th class="num">Monthly contribution</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="investBody"></tbody>
+                <tfoot id="investFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
         <h2>Goals <span class="hint">Set targets for debt paydown, savings, and credit score.</span></h2>
         <div class="goalgrid" id="goalGrid"></div>
     </div>
@@ -358,6 +376,7 @@ function save() {
 function remaining(a){ return Math.max(0, num(a.balance) - num(a.paid)); }
 function isDebt(a){ return ['Credit Card','Loan'].includes(a.type); }
 function isAsset(a){ return ['Checking','Savings'].includes(a.type); }
+function isInvestment(a){ return a.type==='Investment'; }
 function isProperty(a){ return a.type==='Other' && num(a.balance)>0; }
 function isLiability(a){ return ['Credit Card','Loan','Bill'].includes(a.type); }
 
@@ -367,6 +386,7 @@ function render() {
     renderPaySchedule();
     renderCalendar();
     renderAccounts();
+    renderInvestments();
     renderGoals();
     renderSpending();
     renderPayoff();
@@ -543,7 +563,8 @@ function renderStats() {
     const totalPaid = data.accounts.filter(isDebt).reduce((s,a)=>s+num(a.paid),0);
     const cash = data.accounts.filter(isAsset).reduce((s,a)=>s+num(a.balance),0);
     const property = data.accounts.filter(isProperty).reduce((s,a)=>s+num(a.balance),0);
-    const netWorth = cash + property - debtRemaining;
+    const investments = data.accounts.filter(isInvestment).reduce((s,a)=>s+num(a.balance),0);
+    const netWorth = cash + property + investments - debtRemaining;
     const cards = data.accounts.filter(a=>a.type==='Credit Card' && num(a.limit));
     const ccBal = cards.reduce((s,a)=>s+remaining(a),0);
     const ccLimit = cards.reduce((s,a)=>s+num(a.limit),0);
@@ -552,8 +573,9 @@ function renderStats() {
     const statCardsData = [
         { label:'Total debt remaining', value:money(debtRemaining), cls:'bad', note:'Incl. mortgage. Lower is better' },
         { label:'Cash (checking + savings)', value:money(cash), cls:'good', note:'Build this up' },
-        { label:'Property / other assets', value:money(property), cls:'good', note:'Home value etc.' },
-        { label:'Net worth', value:money(netWorth), cls:netWorth>=0?'good':'bad', note:'Cash + property − all debt' },
+        { label:'Investments / retirement', value:money(investments), cls:'good', note:'401(k), brokerage, etc.' },
+        { label:'Property', value:money(property), cls:'good', note:'Home value etc.' },
+        { label:'Net worth', value:money(netWorth), cls:netWorth>=0?'good':'bad', note:'Assets − all debt' },
         { label:'Card utilization', value: ccLimit>0?util.toFixed(0)+'%':'—', cls:utilCls, note:'Keep under 30% for credit' }
     ];
     document.getElementById('statCards').innerHTML = statCardsData.map(c=>`
@@ -589,13 +611,13 @@ function cell(value, onInput, opts={}) {
 
 function renderAccounts() {
     const body = document.getElementById('acctBody');
-    body.innerHTML = data.accounts.map((a,i)=>{
+    body.innerHTML = data.accounts.map((a,i)=>({a,i})).filter(o=>!isInvestment(o.a)).map(({a,i})=>{
         const statusOpts = STATUS.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('');
         return `<tr>
             <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
             <td>
                 <select onchange="upd(${i},'type',this.value)">
-                    ${['Credit Card','Loan','Checking','Savings','Bill','Other'].map(t=>`<option ${t===a.type?'selected':''}>${t}</option>`).join('')}
+                    ${['Credit Card','Loan','Checking','Savings','Bill','Investment','Other'].map(t=>`<option ${t===a.type?'selected':''}>${t}</option>`).join('')}
                 </select>
             </td>
             <td class="num">${cell(a.balance,`oninput="upd(${i},'balance',this.value)"`,{num:true})}</td>
@@ -634,6 +656,34 @@ function utilCell(a){
     const u = remaining(a)/num(a.limit)*100;
     const color = u>=50?'#d94c4c':(u>=30?'#e0a400':'#1b9e5a');
     return `<b style="color:${color}">${u.toFixed(0)}%</b>`;
+}
+
+function renderInvestments(){
+    const body = document.getElementById('investBody');
+    if(!body) return;
+    const list = data.accounts.map((a,i)=>({a,i})).filter(o=>isInvestment(o.a));
+    if(!list.length){ body.innerHTML='<tr><td colspan="4" class="note">No investment accounts. Set an account\u2019s type to “Investment” to list it here.</td></tr>'; document.getElementById('investFoot').innerHTML=''; return; }
+    const perYear = data.income ? (num(data.income.checksPerYear)||26) : 26;
+    let totBal=0, totContrib=0;
+    body.innerHTML = list.map(({a,i})=>{
+        const bal = num(a.balance);
+        const contribM = num(a.contribPerMonth) + num(a.contribPerCheck)*perYear/12;
+        totBal += bal; totContrib += contribM;
+        return `<tr>
+            <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
+            <td class="num">${cell(a.balance,`oninput="upd(${i},'balance',this.value)"`,{num:true})}</td>
+            <td class="num">${contribM>0?money(contribM):'—'}</td>
+            <td style="text-align:center;">${noteDot(a,i)}</td>
+        </tr>`;
+    }).join('');
+    document.getElementById('investFoot').innerHTML = `<tr>
+        <td>Total invested</td>
+        <td class="num">${money(totBal)}</td>
+        <td class="num">${totContrib>0?money(totContrib)+' /mo':''}</td>
+        <td></td>
+    </tr>`;
+    const hint = document.getElementById('investHint');
+    if(hint) hint.textContent = list.length+' accounts • '+money(totBal)+' total';
 }
 
 function renderGoals() {
