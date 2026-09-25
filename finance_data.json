@@ -5,6 +5,7 @@
     { "name": "Vacation Account *0010", "type": "Savings", "balance": 601.28, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 0, "due": "2026-09-27", "apr": 0, "limit": 3800, "status": "Current" },
     { "name": "PayPal Credit Card *1214", "type": "Credit Card", "balance": 2636.03, "paid": 0, "min": 0, "due": "", "apr": 0, "limit": 4924, "status": "Current" },
+    { "name": "Klarna (Southwest Airlines BNPL)", "type": "Loan", "balance": 1070.35, "paid": 0, "min": 179.86, "due": "2026-11-04", "apr": 0, "pay": 179.86, "status": "In Progress" },
     { "name": "Flex Pay HELOC *0002", "type": "Loan", "balance": 13624.26, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" },
     { "name": "MOHELA Student Loan (Chase Undergrad *2464)", "type": "Loan", "balance": 12280.28, "paid": 0, "min": 0, "due": "2026-10-07", "apr": 13.25, "pay": 135, "status": "Current" },
     { "name": "Global Holdings LLC (debt settlement escrow) *4402", "type": "Savings", "balance": 1673.43, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" }
@@ -12,6 +13,7 @@
   "goals": [
     { "title": "Pay down Ollo Platinum", "target": 0, "current": 2922.37, "kind": "debt" },
     { "title": "Pay down PayPal Credit Card", "target": 0, "current": 2636.03, "kind": "debt" },
+    { "title": "Pay off Klarna (Southwest)", "target": 0, "current": 1070.35, "kind": "debt" },
     { "title": "Pay down Flex Pay HELOC", "target": 0, "current": 13624.26, "kind": "debt" },
     { "title": "Pay down MOHELA Student Loan", "target": 0, "current": 12280.28, "kind": "debt" },
     { "title": "Emergency / Vacation Fund", "target": 1000, "current": 601.28, "kind": "savings" },
