@@ -149,6 +149,34 @@
         </div>
     </div>
 
+    <div class="panel">
+        <h2>Debt Payoff Projector <span class="hint">Fill in APR and a monthly payment on debts above to see payoff time &amp; interest.</span></h2>
+        <div class="add-row" style="padding-bottom:0;">
+            <label style="font-size:.82rem;color:var(--muted);">Extra $ per month applied to the highest-APR debt (avalanche):
+                <input class="num" id="extraPay" type="text" value="0" style="width:110px;display:inline-block;border:1px solid var(--line);"
+                    oninput="data.extraPay=num(this.value); renderPayoff(); save();">
+            </label>
+        </div>
+        <div class="tablewrap">
+            <table id="payoffTable">
+                <thead>
+                    <tr>
+                        <th>Debt</th>
+                        <th class="num">Balance</th>
+                        <th class="num">APR %</th>
+                        <th class="num">Monthly pay</th>
+                        <th class="num">Months to payoff</th>
+                        <th class="num">Payoff date</th>
+                        <th class="num">Total interest</th>
+                    </tr>
+                </thead>
+                <tbody id="payoffBody"></tbody>
+                <tfoot id="payoffFoot"></tfoot>
+            </table>
+        </div>
+        <div class="add-row" id="payoffNote" style="font-size:.78rem;color:var(--muted);"></div>
+    </div>
+
     <div class="footer-note">
         Everything you enter is saved in this browser and to the file when you export.<br>
         To sync across phone &amp; desktop: edit, <b>Export data</b>, and commit the JSON to your Git repo (or use GitHub's web/mobile editor).
@@ -206,6 +234,7 @@ function render() {
     renderAccounts();
     renderGoals();
     renderSpending();
+    renderPayoff();
     save();
 }
 
@@ -335,11 +364,85 @@ function renderSpending() {
     </tr>`;
 }
 
+// Simulate months to pay off a balance at a monthly payment and APR.
+// Returns {months, interest, neverPays:bool}
+function amortize(balance, apr, payment){
+    balance = num(balance); const r = num(apr)/100/12; payment = num(payment);
+    if(balance<=0) return {months:0, interest:0, neverPays:false};
+    const firstInterest = balance*r;
+    if(payment<=firstInterest+0.001) return {months:Infinity, interest:Infinity, neverPays:true};
+    let months=0, interest=0, bal=balance, guard=0;
+    while(bal>0.005 && guard<12000){
+        const i = bal*r; interest+=i; bal = bal + i - payment;
+        months++; guard++;
+        if(bal<0) { bal=0; }
+    }
+    return {months, interest, neverPays:false};
+}
+
+function renderPayoff(){
+    const body = document.getElementById('payoffBody');
+    if(!body) return;
+    const ep = document.getElementById('extraPay');
+    if(ep && document.activeElement!==ep) ep.value = num(data.extraPay);
+    const debts = data.accounts.map((a,i)=>({a,i})).filter(o=>['Credit Card','Loan'].includes(o.a.type) && remaining(o.a)>0);
+    // Avalanche: extra goes to highest APR debt
+    const extra = num(data.extraPay);
+    let topAprIdx = -1, topApr = -1;
+    debts.forEach(o=>{ if(num(o.a.apr)>topApr){ topApr=num(o.a.apr); topAprIdx=o.i; } });
+
+    let totMonths=0, totInterest=0, anyUnknown=false, anyNever=false;
+    body.innerHTML = debts.map(o=>{
+        const a=o.a, i=o.i;
+        const bal=remaining(a), apr=num(a.apr), basePay=num(a.pay);
+        const pay = basePay + (i===topAprIdx?extra:0);
+        let monthsTxt, dateTxt, intTxt;
+        if(!apr || !basePay){ monthsTxt='—'; dateTxt='set APR & pay'; intTxt='—'; anyUnknown=true; }
+        else {
+            const res = amortize(bal, apr, pay);
+            if(res.neverPays){ monthsTxt='∞'; dateTxt='payment too low'; intTxt='∞'; anyNever=true; }
+            else {
+                monthsTxt = res.months + ' mo';
+                const d = new Date(); d.setMonth(d.getMonth()+res.months);
+                dateTxt = d.toLocaleDateString('en-US',{year:'numeric',month:'short'});
+                intTxt = money(res.interest);
+                totMonths = Math.max(totMonths, res.months); totInterest += res.interest;
+            }
+        }
+        return `<tr>
+            <td>${a.name}${i===topAprIdx && extra>0?' <span style="color:var(--good);font-size:.72rem;">+extra</span>':''}</td>
+            <td class="num">${money(bal)}</td>
+            <td class="num">${cell(a.apr,`oninput="upd(${i},'apr',this.value); renderPayoff();"`,{num:true})}</td>
+            <td class="num">${cell(a.pay,`oninput="upd(${i},'pay',this.value); renderPayoff();"`,{num:true})}</td>
+            <td class="num">${monthsTxt}</td>
+            <td class="num">${dateTxt}</td>
+            <td class="num">${intTxt}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('payoffFoot').innerHTML = `<tr>
+        <td>All debts</td>
+        <td class="num">${money(debts.reduce((s,o)=>s+remaining(o.a),0))}</td>
+        <td class="num"></td>
+        <td class="num">${money(debts.reduce((s,o)=>s+num(o.a.pay),0)+extra)}</td>
+        <td class="num">${totMonths?('~'+totMonths+' mo'):'—'}</td>
+        <td class="num"></td>
+        <td class="num">${totInterest?money(totInterest):'—'}</td>
+    </tr>`;
+
+    const note = document.getElementById('payoffNote');
+    let msg = [];
+    if(anyUnknown) msg.push('Enter an APR and monthly payment on each debt to project it.');
+    if(anyNever) msg.push('“∞” means the monthly payment only covers interest (or less) — the balance never drops. Increase the payment.');
+    if(extra>0 && topAprIdx>=0) msg.push('Extra $'+extra.toLocaleString()+'/mo is applied to the highest-APR debt ('+data.accounts[topAprIdx].name+').');
+    note.innerHTML = msg.join(' ');
+}
+
 function updSpend(i,field,val){ data.spending[i][field] = field==='amount'?num(val):val; renderSpending(); save(); }
 function addSpend(){ if(!data.spending) data.spending=[]; data.spending.push({category:'New category',amount:0}); render(); }
 function delSpend(i){ data.spending.splice(i,1); render(); }
 
-function upd(i,field,val){ data.accounts[i][field] = (['balance','paid','min','apr','limit'].includes(field))?num(val):val;
+function upd(i,field,val){ data.accounts[i][field] = (['balance','paid','min','apr','limit','pay'].includes(field))?num(val):val;
     if(['balance','paid','limit'].includes(field)) renderAccounts(), renderStats(); save(); }
 function updGoal(i,field,val){ data.goals[i][field] = (['target','current'].includes(field))?num(val):val;
     renderGoals(); save(); }
