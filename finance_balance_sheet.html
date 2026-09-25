@@ -408,7 +408,11 @@ function renderIncome(){
     const m = monthlyIncome();
     // Required monthly outflow = sum of min/pay on debts+bills + monthly spending baseline
     const monthlyDebtMins = data.accounts.filter(a=>['Credit Card','Loan','Bill'].includes(a.type))
-        .reduce((s,a)=>s + Math.max(num(a.min), 0), 0);
+        .reduce((s,a)=>{
+            const drafts = Array.isArray(a.draftDays) ? a.draftDays.length : (num(a.draftDay)>0?1:0);
+            if(drafts>0 && num(a.draftAmount)>0) return s + num(a.draftAmount)*drafts;
+            return s + Math.max(num(a.min), 0);
+        }, 0);
     const monthlySpend = (data.spending||[]).reduce((s,r)=>s+num(r.amount),0);
     const leftover = m.take - monthlyDebtMins;
     // Auto-save contributions pulled from paychecks (e.g. $100/check into savings)
@@ -530,16 +534,25 @@ function renderCalendar(){
         if(d < today) d = new Date(today.getFullYear(), today.getMonth()+1, day);
         return d;
     }
-    const items = data.accounts
-        .filter(a=> num(a.draftDay)>0 || (a.due && (num(a.min)>0 || num(a.pay)>0 || ['Credit Card','Loan','Bill'].includes(a.type))))
-        .map(a=>{
-            const recurring = num(a.draftDay)>0;
-            const d = recurring ? nextMonthlyDate(num(a.draftDay)) : new Date(a.due+'T00:00:00');
-            const days = Math.round((d - today)/86400000);
+    const items = [];
+    data.accounts.forEach(a=>{
+        const multiDays = Array.isArray(a.draftDays) ? a.draftDays.map(num).filter(n=>n>0) : [];
+        const singleDay = num(a.draftDay)>0 ? [num(a.draftDay)] : [];
+        const draftDays = multiDays.length ? multiDays : singleDay;
+        if(draftDays.length){
+            // One calendar entry per recurring draft day (next occurrence of each)
+            const amt = num(a.draftAmount)>0 ? num(a.draftAmount) : (num(a.min)>0?num(a.min):num(a.pay));
+            draftDays.forEach(day=>{
+                const d = nextMonthlyDate(day);
+                items.push({ a, d, days: Math.round((d-today)/86400000), amt, recurring:true });
+            });
+        } else if(a.due && (num(a.min)>0 || num(a.pay)>0 || ['Credit Card','Loan','Bill'].includes(a.type))){
+            const d = new Date(a.due+'T00:00:00');
             const amt = num(a.min)>0 ? num(a.min) : (num(a.pay)>0?num(a.pay):remaining(a));
-            return { a, d, days, amt, recurring };
-        })
-        .sort((x,y)=> x.d - y.d);
+            items.push({ a, d, days: Math.round((d-today)/86400000), amt, recurring:false });
+        }
+    });
+    items.sort((x,y)=> x.d - y.d);
     if(!items.length){ body.innerHTML = '<tr><td colspan="5" class="note">No upcoming due dates recorded.</td></tr>'; return; }
     body.innerHTML = items.map(it=>{
         const soon = it.days>=0 && it.days<=7;
