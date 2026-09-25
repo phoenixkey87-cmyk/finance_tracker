@@ -168,6 +168,7 @@
         </div>
         <div class="toolbar">
             <button class="primary" onclick="addAccount()">+ Add account</button>
+            <button class="ghost" onclick="toggleAllPanels()" id="collapseAllBtn">▾ Collapse all</button>
             <button class="ghost" onclick="reloadFromRepo()">↻ Reload from repo</button>
             <button class="ghost" onclick="exportJSON()">⬇ Export data</button>
             <button class="ghost" onclick="document.getElementById('importFile').click()">⬆ Import data</button>
@@ -208,7 +209,6 @@
             <button class="chip" data-filter="Credit Card" onclick="setAcctFilter('Credit Card')">Credit Cards</button>
             <button class="chip" data-filter="Loan" onclick="setAcctFilter('Loan')">Loans</button>
             <button class="chip" data-filter="Bill" onclick="setAcctFilter('Bill')">Bills</button>
-            <button class="chip" data-filter="cash" onclick="setAcctFilter('cash')">Cash</button>
         </div>
         <div class="tablewrap">
             <table id="acctTable">
@@ -236,6 +236,11 @@
         <div class="add-row">
             <button onclick="addAccount()">+ Add account</button>
         </div>
+    </div>
+
+    <div class="panel">
+        <h2>Cash Accounts <span class="hint" id="cashHint">Checking and savings balances.</span></h2>
+        <div class="investgrid" id="cashGrid"></div>
     </div>
 
     <div class="panel">
@@ -404,6 +409,7 @@ function render() {
     renderPaySchedule();
     renderCalendar();
     renderAccounts();
+    renderCash();
     renderInvestments();
     renderGoals();
     renderSpending();
@@ -650,14 +656,14 @@ function setAcctFilter(f){
 }
 function matchesAcctFilter(a){
     if(acctFilter==='all') return true;
-    if(acctFilter==='cash') return isAsset(a); // Checking + Savings
     return a.type===acctFilter;
 }
 
 function renderAccounts() {
     const body = document.getElementById('acctBody');
+    // Main table shows only liabilities (debts + bills). Cash and investments have their own sections.
     body.innerHTML = data.accounts.map((a,i)=>({a,i}))
-        .filter(o=>!isInvestment(o.a) && matchesAcctFilter(o.a))
+        .filter(o=>isLiability(o.a) && matchesAcctFilter(o.a))
         .map(({a,i})=>{
         const statusOpts = STATUS.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('');
         return `<tr>
@@ -703,6 +709,41 @@ function utilCell(a){
     const u = remaining(a)/num(a.limit)*100;
     const color = u>=50?'#d94c4c':(u>=30?'#e0a400':'#1b9e5a');
     return `<b style="color:${color}">${u.toFixed(0)}%</b>`;
+}
+
+function renderCash(){
+    const grid = document.getElementById('cashGrid');
+    if(!grid) return;
+    const list = data.accounts.map((a,i)=>({a,i})).filter(o=>isAsset(o.a))
+        .sort((x,y)=>num(y.a.balance)-num(x.a.balance));
+    if(!list.length){
+        grid.innerHTML='<div class="note" style="grid-column:1/-1;">No cash accounts. Set an account\u2019s type to “Checking” or “Savings”.</div>';
+        return;
+    }
+    const perYear = data.income ? (num(data.income.checksPerYear)||26) : 26;
+    let total=0;
+    const cards = list.map(({a,i})=>{
+        const bal = num(a.balance);
+        total += bal;
+        const contribM = num(a.contribPerMonth) + num(a.contribPerCheck)*perYear/12 + monthlyDraft(a);
+        const div = num(a.dividendMonthly);
+        const note = (a.note||'').trim();
+        return `<div class="invest-card" style="border-left-color:var(--accent2,#00776b);">
+            <div class="ic-name">${a.name}</div>
+            <div class="ic-bal">${money(bal)}</div>
+            ${contribM>0?`<div class="ic-contrib">+ ${money(contribM)}/mo in</div>`:''}
+            ${div>0?`<div class="ic-meta">Dividend ~${money(div)}/mo</div>`:''}
+            ${note?`<div class="ic-meta">${note.replace(/</g,'&lt;')}</div>`:''}
+        </div>`;
+    }).join('');
+    const totalCard = `<div class="invest-card total">
+        <div class="ic-name">Total cash</div>
+        <div class="ic-bal">${money(total)}</div>
+        <div class="ic-meta">${list.length} accounts</div>
+    </div>`;
+    grid.innerHTML = totalCard + cards;
+    const hint = document.getElementById('cashHint');
+    if(hint) hint.textContent = list.length+' accounts • '+money(total)+' total';
 }
 
 function renderInvestments(){
@@ -994,9 +1035,24 @@ function setupPanels(){
             collapsed[key] = panel.classList.contains('collapsed');
             try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); } catch(e){}
         });
+        panel.dataset.panelKey = key;
     });
 }
 setupPanels();
+
+// Collapse or expand every panel at once.
+function toggleAllPanels(){
+    const panels = document.querySelectorAll('.panel');
+    const anyOpen = [...panels].some(p=>!p.classList.contains('collapsed'));
+    const collapsed = {};
+    panels.forEach(p=>{
+        p.classList.toggle('collapsed', anyOpen);   // if any open -> collapse all; else expand all
+        if(p.dataset.panelKey) collapsed[p.dataset.panelKey] = anyOpen;
+    });
+    try { localStorage.setItem('financePanelCollapsed_v1', JSON.stringify(collapsed)); } catch(e){}
+    const btn = document.getElementById('collapseAllBtn');
+    if(btn) btn.textContent = anyOpen ? '▸ Expand all' : '▾ Collapse all';
+}
 
 // Auto-sync: always check the repo's finance_data.json and adopt it when it's newer
 // than the copy saved in this browser. This prevents a stale local cache from hiding updates.
