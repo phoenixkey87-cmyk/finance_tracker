@@ -14,7 +14,8 @@
     { "name": "Global Holdings LLC (debt settlement escrow) *4402", "type": "Savings", "balance": 1673.43, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" },
     { "name": "Mortgage - 740 Liberty Village Dr (NAF *4395)", "type": "Loan", "balance": 94428.10, "paid": 0, "min": 925.90, "due": "2026-10-01", "apr": 3.875, "pay": 925.90, "note": "FHA 30yr, escrow $411.60/mo incl. Autopay OFF.", "status": "Current" },
     { "name": "Home Equity - 740 Liberty Village Dr (asset)", "type": "Other", "balance": 174000, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Est. market value; mortgage tracked separately", "status": "Current" },
-    { "name": "Primerica Investment *2538 (Franklin Growth FKGRX)", "type": "Other", "balance": 458.88, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "TOD account; 3.134 shares. Rep: Julia Tate", "status": "Current" }
+    { "name": "Primerica Investment *2538 (Franklin Growth FKGRX)", "type": "Other", "balance": 458.88, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "TOD account; 3.134 shares. Rep: Julia Tate", "status": "Current" },
+    { "name": "Robinhood Brokerage (Individual)", "type": "Other", "balance": 2248.36, "paid": 0, "min": 0, "due": "", "apr": 0, "note": "Diversified stocks + LTC. Funded via checking ACH.", "status": "Current" }
   ],
   "goals": [
     { "title": "Pay down Ollo Platinum", "target": 0, "current": 2922.37, "kind": "debt" },
@@ -26,6 +27,7 @@
     { "title": "Grow Regular Savings", "target": 5000, "current": 734.61, "kind": "savings" },
     { "title": "Checking buffer", "target": 2000, "current": 616.76, "kind": "savings" },
     { "title": "Grow Primerica investment", "target": 2000, "current": 458.88, "kind": "savings" },
+    { "title": "Grow Robinhood brokerage", "target": 5000, "current": 2248.36, "kind": "savings" },
     { "title": "Credit score (Fair \u2192 Good)", "target": 720, "current": 626, "kind": "credit" }
   ],
   "spendPeriod": "Last 30 days (as of 9/25/2026)",
