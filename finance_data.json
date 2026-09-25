@@ -3,7 +3,7 @@
     { "name": "Vantage Checking *0050", "type": "Checking", "balance": 616.76, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Regular Savings *0000", "type": "Savings", "balance": 734.61, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Vacation Account *0010", "type": "Savings", "balance": 601.28, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
-    { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 0, "due": "2026-09-27", "apr": 0, "limit": 3800, "note": "Utilities charged here", "status": "Current" },
+    { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 99.00, "due": "2026-09-27", "apr": 29.24, "limit": 3800, "pay": 116, "note": "29.24% APR. Min $99. Stmt bal $2,753.24. Utilities here.", "status": "Current" },
     { "name": "PayPal Credit Card *1214", "type": "Credit Card", "balance": 2636.03, "paid": 0, "min": 0, "due": "", "apr": 0, "limit": 4924, "note": "Utilities charged here", "status": "Current" },
     { "name": "Home Depot Credit Card *5833", "type": "Credit Card", "balance": 0, "paid": 0, "min": 0, "due": "2026-10-14", "apr": 0, "limit": 500, "note": "Paid off - $0 balance", "status": "Paid Off" },
     { "name": "Macy's Credit Card *0206", "type": "Credit Card", "balance": 0, "paid": 0, "min": 0, "due": "2026-10-02", "apr": 0, "limit": 100, "note": "$50.34 statement bal due Oct 2 - autopay NOT enrolled", "status": "Current" },
