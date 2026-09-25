@@ -95,6 +95,29 @@
     <div class="cards" id="statCards"></div>
 
     <div class="panel">
+        <h2>Income &amp; Monthly Cash Flow <span class="hint" id="incomeHint">Take-home vs. what goes out.</span></h2>
+        <div class="cards" id="incomeCards" style="margin:0;padding:16px 18px;"></div>
+    </div>
+
+    <div class="panel">
+        <h2>Upcoming Payments <span class="hint">Sorted by due date. Red = due within 7 days.</span></h2>
+        <div class="tablewrap">
+            <table id="calTable">
+                <thead>
+                    <tr>
+                        <th>Due date</th>
+                        <th>Days</th>
+                        <th>Account</th>
+                        <th class="num">Amount due</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="calBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
         <h2>Accounts &amp; Bills <span class="hint">Tap any cell to edit. Data saves automatically.</span></h2>
         <div class="tablewrap">
             <table id="acctTable">
@@ -233,11 +256,75 @@ function isProperty(a){ return a.type==='Other' && num(a.balance)>0; }
 
 function render() {
     renderStats();
+    renderIncome();
+    renderCalendar();
     renderAccounts();
     renderGoals();
     renderSpending();
     renderPayoff();
     save();
+}
+
+function monthlyIncome(){
+    const inc = data.income; if(!inc) return {gross:0, take:0};
+    const perYear = num(inc.checksPerYear) || (inc.frequency==='biweekly'?26:(inc.frequency==='weekly'?52:(inc.frequency==='semimonthly'?24:12)));
+    return { gross: num(inc.grossPerCheck)*perYear/12, take: num(inc.takeHomePerCheck)*perYear/12, perYear };
+}
+
+function renderIncome(){
+    const el = document.getElementById('incomeCards');
+    if(!el) return;
+    const inc = data.income;
+    if(!inc){ el.innerHTML = '<div class="note">No income recorded.</div>'; return; }
+    const m = monthlyIncome();
+    // Required monthly outflow = sum of min/pay on debts+bills + monthly spending baseline
+    const monthlyDebtMins = data.accounts.filter(a=>['Credit Card','Loan','Bill'].includes(a.type))
+        .reduce((s,a)=>s + Math.max(num(a.min), 0), 0);
+    const monthlySpend = (data.spending||[]).reduce((s,r)=>s+num(r.amount),0);
+    const leftover = m.take - monthlyDebtMins;
+    const hint = document.getElementById('incomeHint');
+    if(hint) hint.textContent = inc.source ? (inc.source+' • '+inc.frequency+' • '+money(num(inc.takeHomePerCheck))+'/check') : '';
+    const cards = [
+        { label:'Take-home / month', value:money(m.take), cls:'good', note:'~'+m.perYear+' checks/yr' },
+        { label:'Min payments / month', value:money(monthlyDebtMins), cls:'', note:'Sum of listed minimums' },
+        { label:'After minimums', value:money(leftover), cls:leftover>=0?'good':'bad', note:'Take-home − minimums' },
+        { label:'Recent monthly spend', value:money(monthlySpend), cls:'', note:'From spending panel' }
+    ];
+    el.innerHTML = cards.map(c=>`
+        <div class="stat">
+            <div class="label">${c.label}</div>
+            <div class="value ${c.cls}">${c.value}</div>
+            <div class="note">${c.note}</div>
+        </div>`).join('');
+}
+
+function renderCalendar(){
+    const body = document.getElementById('calBody');
+    if(!body) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const items = data.accounts
+        .filter(a=>a.due && (num(a.min)>0 || num(a.pay)>0 || ['Credit Card','Loan','Bill'].includes(a.type)))
+        .map(a=>{
+            const d = new Date(a.due+'T00:00:00');
+            const days = Math.round((d - today)/86400000);
+            const amt = num(a.min)>0 ? num(a.min) : (num(a.pay)>0?num(a.pay):remaining(a));
+            return { a, d, days, amt };
+        })
+        .sort((x,y)=> x.d - y.d);
+    if(!items.length){ body.innerHTML = '<tr><td colspan="5" class="note">No upcoming due dates recorded.</td></tr>'; return; }
+    body.innerHTML = items.map(it=>{
+        const soon = it.days>=0 && it.days<=7;
+        const overdue = it.days<0;
+        const color = overdue?'#d94c4c':(soon?'#e0a400':'inherit');
+        const dayTxt = overdue?('OVERDUE '+Math.abs(it.days)+'d'):(it.days===0?'TODAY':it.days+'d');
+        return `<tr>
+            <td style="color:${color};font-weight:${(soon||overdue)?'800':'400'}">${it.d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</td>
+            <td style="color:${color};font-weight:${(soon||overdue)?'800':'400'}">${dayTxt}</td>
+            <td>${it.a.name}</td>
+            <td class="num">${money(it.amt)}</td>
+            <td><span style="color:${STATUS_COLOR[it.a.status]||'#1a2330'};font-weight:700;font-size:.8rem;">${it.a.status}</span></td>
+        </tr>`;
+    }).join('');
 }
 
 function renderStats() {

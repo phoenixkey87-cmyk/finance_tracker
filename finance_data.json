@@ -34,6 +34,13 @@
     { "title": "Grow Robinhood brokerage", "target": 5000, "current": 2248.36, "kind": "savings" },
     { "title": "Credit score (Fair \u2192 Good)", "target": 720, "current": 626, "kind": "credit" }
   ],
+  "income": {
+    "source": "Charter Communications (ADP)",
+    "grossPerCheck": 3045.40,
+    "takeHomePerCheck": 2145.95,
+    "frequency": "biweekly",
+    "checksPerYear": 26
+  },
   "spendPeriod": "Last 30 days (as of 9/25/2026)",
   "spending": [
     { "category": "Home Expenses", "amount": 1509.71 },
