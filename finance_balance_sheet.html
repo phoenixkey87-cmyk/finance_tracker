@@ -111,6 +111,7 @@
                         <th class="num">Limit</th>
                         <th class="num">Util %</th>
                         <th>Status</th>
+                        <th>Note</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -291,6 +292,7 @@ function renderAccounts() {
             <td>
                 <select class="status" style="color:${STATUS_COLOR[a.status]||'#1a2330'}" onchange="upd(${i},'status',this.value)">${statusOpts}</select>
             </td>
+            <td>${cell(a.note,`oninput="upd(${i},'note',this.value)"`)}</td>
             <td class="row-actions"><button class="danger" onclick="delAccount(${i})">✕</button></td>
         </tr>`;
     }).join('');
@@ -303,7 +305,7 @@ function renderAccounts() {
         <td class="num">${money(totBal)}</td>
         <td class="num">${money(totPaid)}</td>
         <td class="num">${money(totRem)}</td>
-        <td colspan="7"></td>
+        <td colspan="8"></td>
     </tr>`;
 }
 
