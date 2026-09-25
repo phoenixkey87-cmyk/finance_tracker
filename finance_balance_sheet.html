@@ -923,17 +923,31 @@ async function reloadFromRepo(){
     } catch(e){ alert('Reload failed: '+e.message); }
 }
 
-// Auto-load finance_data.json sitting next to this file (works when served, e.g. GitHub Pages)
-(async function tryAutoload(){
-    if(localStorage.getItem(STORE_KEY)) return; // don't clobber local edits
+// Auto-sync: always check the repo's finance_data.json and adopt it when it's newer
+// than the copy saved in this browser. This prevents a stale local cache from hiding updates.
+(async function autoSync(){
+    let local = null;
+    try { const raw = localStorage.getItem(STORE_KEY); if(raw) local = JSON.parse(raw); } catch(e){}
     try {
-        const res = await fetch('finance_data.json',{cache:'no-store'});
-        if(res.ok){ const j = await res.json(); if(j.accounts&&j.goals){ data=j; } }
-    } catch(e){}
+        const res = await fetch('finance_data.json?ts='+Date.now(),{cache:'no-store'});
+        if(res.ok){
+            const repo = await res.json();
+            if(repo && repo.accounts && repo.goals){
+                const repoV  = Number(repo.dataVersion)  || 0;
+                const localV = Number(local && local.dataVersion) || 0;
+                // Use repo data if: no local copy, or repo is a newer version.
+                if(!local || repoV > localV){
+                    if(!repo.spending) repo.spending = [];
+                    data = repo;
+                    save();               // persist the newer repo data locally
+                    render();
+                    return;
+                }
+            }
+        }
+    } catch(e){ /* offline or served as file:// — fall back to local */ }
     render();
 })();
-
-render();
 </script>
 </body>
 </html>

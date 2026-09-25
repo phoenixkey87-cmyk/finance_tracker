@@ -1,4 +1,5 @@
 {
+  "dataVersion": 20260925,
   "accounts": [
     { "name": "Vantage Checking *0050", "type": "Checking", "balance": 616.76, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
     { "name": "Regular Savings *0000", "type": "Savings", "balance": 734.61, "paid": 0, "min": 0, "due": "", "apr": 0, "contribPerCheck": 100, "dividendMonthly": 0.09, "note": "Auto-saves ~$100/paycheck. Earns monthly dividend (~$0.09).", "status": "Current" },
