@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Balance Sheet</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+        --bg1:#0f2027; --bg2:#203a43; --bg3:#2c5364;
+        --card:#ffffff; --ink:#1a2330; --muted:#6b7785;
+        --good:#1b9e5a; --warn:#e0a400; --bad:#d94c4c;
+        --accent:#2563eb; --line:#e3e8ef; --chip:#eef3fb;
+    }
+    body {
+        font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+        background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+        min-height:100vh; color:var(--ink); padding:20px 12px 60px;
+    }
+    .wrap { max-width:1100px; margin:0 auto; }
+    header.top {
+        display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+        justify-content:space-between; margin-bottom:18px;
+    }
+    header.top h1 { color:#fff; font-size:1.5rem; letter-spacing:.3px; }
+    header.top .sub { color:rgba(255,255,255,.7); font-size:.82rem; margin-top:2px; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
+    button {
+        border:none; border-radius:10px; padding:9px 14px; font-size:.85rem;
+        font-weight:600; cursor:pointer; background:var(--chip); color:var(--ink);
+        transition:transform .05s ease, filter .15s ease;
+    }
+    button:hover { filter:brightness(.97); }
+    button:active { transform:translateY(1px); }
+    button.primary { background:var(--accent); color:#fff; }
+    button.ghost { background:rgba(255,255,255,.15); color:#fff; }
+    button.danger { background:#fde8e8; color:var(--bad); }
+
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
+    .stat { background:var(--card); border-radius:16px; padding:16px 18px; box-shadow:0 8px 24px rgba(0,0,0,.18); }
+    .stat .label { font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; color:var(--muted); font-weight:700; }
+    .stat .value { font-size:1.5rem; font-weight:800; margin-top:6px; }
+    .stat .value.good { color:var(--good); }
+    .stat .value.bad { color:var(--bad); }
+    .stat .note { font-size:.72rem; color:var(--muted); margin-top:4px; }
+
+    .panel { background:var(--card); border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.18); margin-bottom:18px; overflow:hidden; }
+    .panel h2 { font-size:1rem; padding:14px 18px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+    .panel h2 .hint { font-size:.72rem; color:var(--muted); font-weight:500; }
+
+    .tablewrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.85rem; min-width:720px; }
+    th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); vertical-align:middle; }
+    th { font-size:.68rem; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); background:#fafbfe; }
+    td.num, th.num { text-align:right; }
+    tr:last-child td { border-bottom:none; }
+    input, select {
+        width:100%; border:1px solid transparent; background:transparent; border-radius:8px;
+        padding:6px 8px; font-size:.85rem; color:var(--ink); font-family:inherit;
+    }
+    input:focus, select:focus { outline:none; border-color:var(--accent); background:#fff; }
+    input.num { text-align:right; }
+    .status-pill { border-radius:999px; padding:2px 6px; font-weight:700; font-size:.78rem; }
+    select.status { font-weight:700; }
+    .row-actions button { padding:5px 9px; font-size:.75rem; }
+    tfoot td { font-weight:800; background:#fafbfe; }
+    .progress { height:10px; border-radius:999px; background:var(--line); overflow:hidden; margin-top:8px; }
+    .progress > span { display:block; height:100%; background:linear-gradient(90deg,#1b9e5a,#3ec978); }
+    .goalgrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; padding:16px 18px; }
+    .goal { border:1px solid var(--line); border-radius:12px; padding:14px; }
+    .goal .g-title { font-weight:700; font-size:.9rem; }
+    .goal .g-nums { font-size:.78rem; color:var(--muted); margin-top:2px; }
+    .add-row { padding:12px 18px; }
+    .footer-note { color:rgba(255,255,255,.75); font-size:.78rem; text-align:center; margin-top:10px; line-height:1.5; }
+    .save-flag { color:rgba(255,255,255,.85); font-size:.75rem; }
+    @media (max-width:600px){ header.top h1{font-size:1.25rem;} .stat .value{font-size:1.25rem;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <header class="top">
+        <div>
+            <h1>💰 Finance &amp; Bill Balance Sheet</h1>
+            <div class="sub">Track balances, payments, and status. Goal: lower debt, grow savings, raise credit.</div>
+        </div>
+        <div class="toolbar">
+            <button class="primary" onclick="addAccount()">+ Add account</button>
+            <button class="ghost" onclick="exportJSON()">⬇ Export data</button>
+            <button class="ghost" onclick="document.getElementById('importFile').click()">⬆ Import data</button>
+            <button class="ghost" onclick="exportCSV()">⬇ CSV</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+        </div>
+    </header>
+
+    <div class="cards" id="statCards"></div>
+
+    <div class="panel">
+        <h2>Accounts &amp; Bills <span class="hint">Tap any cell to edit. Data saves automatically.</span></h2>
+        <div class="tablewrap">
+            <table id="acctTable">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Type</th>
+                        <th class="num">Balance due</th>
+                        <th class="num">Paid</th>
+                        <th class="num">Remaining</th>
+                        <th class="num">Min / Due</th>
+                        <th>Due date</th>
+                        <th>APR %</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="acctBody"></tbody>
+                <tfoot id="acctFoot"></tfoot>
+            </table>
+        </div>
+        <div class="add-row">
+            <button onclick="addAccount()">+ Add account</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Goals <span class="hint">Set targets for debt paydown, savings, and credit score.</span></h2>
+        <div class="goalgrid" id="goalGrid"></div>
+    </div>
+
+    <div class="footer-note">
+        Everything you enter is saved in this browser and to the file when you export.<br>
+        To sync across phone &amp; desktop: edit, <b>Export data</b>, and commit the JSON to your Git repo (or use GitHub's web/mobile editor).
+        <div class="save-flag" id="saveFlag"></div>
+    </div>
+</div>
+
+<script>
+const STORE_KEY = 'financeBalanceSheet_v1';
+const money = n => (isNaN(n)?0:n).toLocaleString('en-US',{style:'currency',currency:'USD'});
+const num = v => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; };
+
+const STATUS = ['Current','Paid Off','Past Due','In Progress','Autopay'];
+const STATUS_COLOR = { 'Current':'#1b9e5a','Paid Off':'#1b9e5a','Past Due':'#d94c4c','In Progress':'#e0a400','Autopay':'#2563eb' };
+
+function seed() {
+    return {
+        accounts: [
+            { name:'Credit Card 1', type:'Credit Card', balance:2500, paid:0, min:75, due:'', apr:24.99, status:'In Progress' },
+            { name:'Credit Card 2', type:'Credit Card', balance:1200, paid:0, min:40, due:'', apr:19.99, status:'In Progress' },
+            { name:'Auto Loan', type:'Loan', balance:8000, paid:0, min:320, due:'', apr:6.5, status:'Current' },
+            { name:'Checking', type:'Checking', balance:0, paid:0, min:0, due:'', apr:0, status:'Current' },
+            { name:'Savings', type:'Savings', balance:0, paid:0, min:0, due:'', apr:0.5, status:'Current' }
+        ],
+        goals: [
+            { title:'Pay down credit card debt', target:0, current:3700, kind:'debt' },
+            { title:'Grow savings', target:5000, current:0, kind:'savings' },
+            { title:'Checking buffer', target:2000, current:0, kind:'savings' },
+            { title:'Credit score', target:750, current:650, kind:'credit' }
+        ]
+    };
+}
+
+let data = load();
+
+function load() {
+    try {
+        const raw = localStorage.getItem(STORE_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch(e){}
+    return seed();
+}
+function save() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    const f = document.getElementById('saveFlag');
+    f.textContent = 'Saved ' + new Date().toLocaleTimeString();
+}
+
+function remaining(a){ return Math.max(0, num(a.balance) - num(a.paid)); }
+function isDebt(a){ return ['Credit Card','Loan'].includes(a.type); }
+function isAsset(a){ return ['Checking','Savings'].includes(a.type); }
+
+function render() {
+    renderStats();
+    renderAccounts();
+    renderGoals();
+    save();
+}
+
+function renderStats() {
+    const debtRemaining = data.accounts.filter(isDebt).reduce((s,a)=>s+remaining(a),0);
+    const totalPaid = data.accounts.filter(isDebt).reduce((s,a)=>s+num(a.paid),0);
+    const assets = data.accounts.filter(isAsset).reduce((s,a)=>s+num(a.balance),0);
+    const netWorth = assets - debtRemaining;
+    const cards = [
+        { label:'Total debt remaining', value:money(debtRemaining), cls:'bad', note:'Lower is better' },
+        { label:'Paid toward debt', value:money(totalPaid), cls:'good', note:'Progress this cycle' },
+        { label:'Cash (checking + savings)', value:money(assets), cls:'good', note:'Build this up' },
+        { label:'Net position', value:money(netWorth), cls:netWorth>=0?'good':'bad', note:'Assets − debt' }
+    ];
+    document.getElementById('statCards').innerHTML = cards.map(c=>`
+        <div class="stat">
+            <div class="label">${c.label}</div>
+            <div class="value ${c.cls}">${c.value}</div>
+            <div class="note">${c.note}</div>
+        </div>`).join('');
+}
+
+function cell(value, onInput, opts={}) {
+    const cls = opts.num ? 'num' : '';
+    const type = opts.type || 'text';
+    return `<input class="${cls}" type="${type}" value="${value==null?'':String(value).replace(/"/g,'&quot;')}" ${onInput}>`;
+}
+
+function renderAccounts() {
+    const body = document.getElementById('acctBody');
+    body.innerHTML = data.accounts.map((a,i)=>{
+        const statusOpts = STATUS.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('');
+        return `<tr>
+            <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
+            <td>
+                <select onchange="upd(${i},'type',this.value)">
+                    ${['Credit Card','Loan','Checking','Savings','Bill','Other'].map(t=>`<option ${t===a.type?'selected':''}>${t}</option>`).join('')}
+                </select>
+            </td>
+            <td class="num">${cell(a.balance,`oninput="upd(${i},'balance',this.value)"`,{num:true})}</td>
+            <td class="num">${cell(a.paid,`oninput="upd(${i},'paid',this.value)"`,{num:true})}</td>
+            <td class="num"><b>${money(remaining(a))}</b></td>
+            <td class="num">${cell(a.min,`oninput="upd(${i},'min',this.value)"`,{num:true})}</td>
+            <td>${cell(a.due,`oninput="upd(${i},'due',this.value)"`,{type:'date'})}</td>
+            <td class="num">${cell(a.apr,`oninput="upd(${i},'apr',this.value)"`,{num:true})}</td>
+            <td>
+                <select class="status" style="color:${STATUS_COLOR[a.status]||'#1a2330'}" onchange="upd(${i},'status',this.value)">${statusOpts}</select>
+            </td>
+            <td class="row-actions"><button class="danger" onclick="delAccount(${i})">✕</button></td>
+        </tr>`;
+    }).join('');
+
+    const totBal = data.accounts.reduce((s,a)=>s+num(a.balance),0);
+    const totPaid = data.accounts.reduce((s,a)=>s+num(a.paid),0);
+    const totRem = data.accounts.reduce((s,a)=>s+remaining(a),0);
+    document.getElementById('acctFoot').innerHTML = `<tr>
+        <td colspan="2">Totals</td>
+        <td class="num">${money(totBal)}</td>
+        <td class="num">${money(totPaid)}</td>
+        <td class="num">${money(totRem)}</td>
+        <td colspan="5"></td>
+    </tr>`;
+}
+
+function renderGoals() {
+    const grid = document.getElementById('goalGrid');
+    grid.innerHTML = data.goals.map((g,i)=>{
+        let pct;
+        if (g.kind==='debt') {
+            // progress = how far current is toward target (target usually 0)
+            const start = num(g.current); // current owed
+            pct = start<=num(g.target) ? 100 : Math.max(0, Math.min(100, (1 - (start-num(g.target)) / (start||1)) * 100));
+        } else {
+            pct = num(g.target)===0 ? 0 : Math.max(0, Math.min(100, num(g.current)/num(g.target)*100));
+        }
+        return `<div class="goal">
+            <div class="g-title">${cell(g.title,`oninput="updGoal(${i},'title',this.value)"`)}</div>
+            <div class="g-nums">
+                Current ${cell(g.current,`oninput="updGoal(${i},'current',this.value)"`,{num:true})}
+                / Target ${cell(g.target,`oninput="updGoal(${i},'target',this.value)"`,{num:true})}
+            </div>
+            <div class="progress"><span style="width:${pct.toFixed(0)}%"></span></div>
+            <div class="g-nums" style="margin-top:6px;">${pct.toFixed(0)}% ${g.kind==='debt'?'paid down':'to goal'}
+                <button class="danger" style="float:right;padding:3px 8px;" onclick="delGoal(${i})">✕</button>
+            </div>
+        </div>`;
+    }).join('') + `<div class="goal" style="display:flex;align-items:center;justify-content:center;">
+        <button class="primary" onclick="addGoal()">+ Add goal</button></div>`;
+}
+
+function upd(i,field,val){ data.accounts[i][field] = (['balance','paid','min','apr'].includes(field))?num(val):val;
+    if(['balance','paid'].includes(field)) renderAccounts(), renderStats(); save(); }
+function updGoal(i,field,val){ data.goals[i][field] = (['target','current'].includes(field))?num(val):val;
+    renderGoals(); save(); }
+
+function addAccount(){ data.accounts.push({name:'New account',type:'Bill',balance:0,paid:0,min:0,due:'',apr:0,status:'Current'}); render(); }
+function delAccount(i){ data.accounts.splice(i,1); render(); }
+function addGoal(){ data.goals.push({title:'New goal',target:0,current:0,kind:'savings'}); render(); }
+function delGoal(i){ data.goals.splice(i,1); render(); }
+
+function exportJSON(){
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    downloadBlob(blob, 'finance_data.json');
+}
+function exportCSV(){
+    const head = ['Account','Type','Balance Due','Paid','Remaining','Min/Due','Due Date','APR%','Status'];
+    const rows = data.accounts.map(a=>[a.name,a.type,num(a.balance),num(a.paid),remaining(a),num(a.min),a.due,num(a.apr),a.status]);
+    const csv = [head,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    downloadBlob(new Blob([csv],{type:'text/csv'}), 'finance_balance_sheet.csv');
+}
+function downloadBlob(blob,name){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+    URL.revokeObjectURL(url);
+}
+function importJSON(e){
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const parsed = JSON.parse(reader.result);
+            if(parsed.accounts && parsed.goals){ data = parsed; render(); alert('Data imported.'); }
+            else alert('That file does not look like finance data.');
+        } catch(err){ alert('Could not read that file: '+err.message); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+}
+
+// Auto-load finance_data.json sitting next to this file (works when served, e.g. GitHub Pages)
+(async function tryAutoload(){
+    if(localStorage.getItem(STORE_KEY)) return; // don't clobber local edits
+    try {
+        const res = await fetch('finance_data.json',{cache:'no-store'});
+        if(res.ok){ const j = await res.json(); if(j.accounts&&j.goals){ data=j; } }
+    } catch(e){}
+    render();
+})();
+
+render();
+</script>
+</body>
+</html>

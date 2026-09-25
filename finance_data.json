@@ -1,0 +1,15 @@
+{
+  "accounts": [
+    { "name": "Credit Card 1", "type": "Credit Card", "balance": 2500, "paid": 0, "min": 75, "due": "", "apr": 24.99, "status": "In Progress" },
+    { "name": "Credit Card 2", "type": "Credit Card", "balance": 1200, "paid": 0, "min": 40, "due": "", "apr": 19.99, "status": "In Progress" },
+    { "name": "Auto Loan", "type": "Loan", "balance": 8000, "paid": 0, "min": 320, "due": "", "apr": 6.5, "status": "Current" },
+    { "name": "Checking", "type": "Checking", "balance": 0, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "Current" },
+    { "name": "Savings", "type": "Savings", "balance": 0, "paid": 0, "min": 0, "due": "", "apr": 0.5, "status": "Current" }
+  ],
+  "goals": [
+    { "title": "Pay down credit card debt", "target": 0, "current": 3700, "kind": "debt" },
+    { "title": "Grow savings", "target": 5000, "current": 0, "kind": "savings" },
+    { "title": "Checking buffer", "target": 2000, "current": 0, "kind": "savings" },
+    { "title": "Credit score", "target": 750, "current": 650, "kind": "credit" }
+  ]
+}
