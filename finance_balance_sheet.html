@@ -60,9 +60,14 @@
     .panel h2 {
         font-size:.95rem; font-weight:700; padding:15px 20px; display:flex; justify-content:space-between;
         align-items:center; gap:12px; flex-wrap:wrap; background:var(--soft);
-        border-bottom:1px solid var(--line); color:var(--ink);
+        border-bottom:1px solid var(--line); color:var(--ink); cursor:pointer; user-select:none;
     }
     .panel h2 .hint { font-size:.74rem; color:var(--muted); font-weight:400; }
+    .panel h2 .h2-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .panel h2 .chevron { display:inline-block; transition:transform .18s ease; color:var(--muted); font-size:.8rem; }
+    .panel.collapsed h2 { border-bottom:none; }
+    .panel.collapsed h2 .chevron { transform:rotate(-90deg); }
+    .panel.collapsed .panel-body { display:none; }
 
     .tablewrap { overflow-x:auto; }
     table { width:100%; border-collapse:separate; border-spacing:0; font-size:.84rem; }
@@ -135,6 +140,13 @@
     .goal { border:1px solid var(--line); border-radius:8px; padding:16px; background:#fff; }
     .goal .g-title { font-weight:700; font-size:.9rem; }
     .goal .g-nums { font-size:.78rem; color:var(--muted); margin-top:3px; }
+    .filterbar { display:flex; flex-wrap:wrap; gap:8px; padding:14px 20px 4px; }
+    .chip {
+        border:1px solid var(--line); background:#fff; color:var(--muted);
+        border-radius:999px; padding:6px 14px; font-size:.78rem; font-weight:600; cursor:pointer;
+    }
+    .chip:hover { background:var(--soft); }
+    .chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
     .add-row { padding:14px 20px; }
     .footer-note { color:var(--muted); font-size:.78rem; text-align:center; margin-top:8px; line-height:1.6; }
     .save-flag { color:var(--faint); font-size:.72rem; }
@@ -191,6 +203,13 @@
 
     <div class="panel">
         <h2>Accounts &amp; Bills <span class="hint">Tap any cell to edit. Data saves automatically.</span></h2>
+        <div class="filterbar" id="acctFilter">
+            <button class="chip active" data-filter="all" onclick="setAcctFilter('all')">All</button>
+            <button class="chip" data-filter="Credit Card" onclick="setAcctFilter('Credit Card')">Credit Cards</button>
+            <button class="chip" data-filter="Loan" onclick="setAcctFilter('Loan')">Loans</button>
+            <button class="chip" data-filter="Bill" onclick="setAcctFilter('Bill')">Bills</button>
+            <button class="chip" data-filter="cash" onclick="setAcctFilter('cash')">Cash</button>
+        </div>
         <div class="tablewrap">
             <table id="acctTable">
                 <thead>
@@ -621,9 +640,25 @@ function cell(value, onInput, opts={}) {
     return `<input class="${cls}" type="${type}" value="${value==null?'':String(value).replace(/"/g,'&quot;')}" ${onInput}>`;
 }
 
+let acctFilter = 'all';
+function setAcctFilter(f){
+    acctFilter = f;
+    document.querySelectorAll('#acctFilter .chip').forEach(c=>{
+        c.classList.toggle('active', c.getAttribute('data-filter')===f);
+    });
+    renderAccounts();
+}
+function matchesAcctFilter(a){
+    if(acctFilter==='all') return true;
+    if(acctFilter==='cash') return isAsset(a); // Checking + Savings
+    return a.type===acctFilter;
+}
+
 function renderAccounts() {
     const body = document.getElementById('acctBody');
-    body.innerHTML = data.accounts.map((a,i)=>({a,i})).filter(o=>!isInvestment(o.a)).map(({a,i})=>{
+    body.innerHTML = data.accounts.map((a,i)=>({a,i}))
+        .filter(o=>!isInvestment(o.a) && matchesAcctFilter(o.a))
+        .map(({a,i})=>{
         const statusOpts = STATUS.map(s=>`<option ${s===a.status?'selected':''}>${s}</option>`).join('');
         return `<tr>
             <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
@@ -923,6 +958,45 @@ async function reloadFromRepo(){
         else alert('finance_data.json did not look like valid finance data.');
     } catch(e){ alert('Reload failed: '+e.message); }
 }
+
+// Collapsible panels: wrap each panel's content below its <h2> in a .panel-body,
+// add a chevron, and toggle open/closed (state remembered per panel title).
+function setupPanels(){
+    const COLLAPSE_KEY = 'financePanelCollapsed_v1';
+    let collapsed = {};
+    try { collapsed = JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || {}; } catch(e){}
+    document.querySelectorAll('.panel').forEach((panel, idx)=>{
+        const h2 = panel.querySelector('h2');
+        if(!h2) return;
+        const key = (h2.textContent||('panel'+idx)).trim().slice(0,40);
+        // Wrap all siblings after the h2 into a single .panel-body (once).
+        if(!panel.querySelector('.panel-body')){
+            const body = document.createElement('div');
+            body.className = 'panel-body';
+            let node = h2.nextSibling;
+            const toMove = [];
+            while(node){ toMove.push(node); node = node.nextSibling; }
+            toMove.forEach(n=>body.appendChild(n));
+            panel.appendChild(body);
+        }
+        // Add a chevron indicator to the header if not present.
+        if(!h2.querySelector('.chevron')){
+            const chev = document.createElement('span');
+            chev.className = 'chevron';
+            chev.textContent = '▾';
+            h2.appendChild(chev);
+        }
+        // Restore saved state.
+        if(collapsed[key]) panel.classList.add('collapsed');
+        // Toggle on header click.
+        h2.addEventListener('click', ()=>{
+            panel.classList.toggle('collapsed');
+            collapsed[key] = panel.classList.contains('collapsed');
+            try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify(collapsed)); } catch(e){}
+        });
+    });
+}
+setupPanels();
 
 // Auto-sync: always check the repo's finance_data.json and adopt it when it's newer
 // than the copy saved in this browser. This prevents a stale local cache from hiding updates.
