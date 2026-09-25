@@ -219,6 +219,34 @@
         <div class="add-row" id="payoffNote" style="font-size:.78rem;color:var(--muted);"></div>
     </div>
 
+    <div class="panel">
+        <h2>Lump-Sum Strategy <span class="hint">See what one extra payment (like a 3rd paycheck) does.</span></h2>
+        <div class="add-row" style="padding-bottom:0;">
+            <label style="font-size:.82rem;color:var(--muted);">Lump sum to apply:
+                <input class="num" id="lumpAmt" type="text" value="2145.95" style="width:120px;display:inline-block;border:1px solid var(--line);"
+                    oninput="data.lumpAmt=num(this.value); renderLump(); save();">
+            </label>
+            <span style="font-size:.78rem;color:var(--muted);margin-left:8px;">(default = one bi-weekly take-home check)</span>
+        </div>
+        <div class="tablewrap">
+            <table id="lumpTable">
+                <thead>
+                    <tr>
+                        <th>Apply lump to</th>
+                        <th class="num">APR</th>
+                        <th class="num">Balance now</th>
+                        <th class="num">Balance after</th>
+                        <th class="num">Payoff: now → after</th>
+                        <th class="num">Interest saved</th>
+                        <th class="num">Utilization: now → after</th>
+                    </tr>
+                </thead>
+                <tbody id="lumpBody"></tbody>
+            </table>
+        </div>
+        <div class="add-row" id="lumpNote" style="font-size:.78rem;color:var(--muted);"></div>
+    </div>
+
     <div class="footer-note">
         Everything you enter is saved in this browser and to the file when you export.<br>
         To sync across phone &amp; desktop: edit, <b>Export data</b>, and commit the JSON to your Git repo (or use GitHub's web/mobile editor).
@@ -281,6 +309,7 @@ function render() {
     renderGoals();
     renderSpending();
     renderPayoff();
+    renderLump();
     save();
 }
 
@@ -364,6 +393,45 @@ function renderPaySchedule(){
     note.innerHTML = threeCheckMonths>0
         ? `You have <b>${threeCheckMonths}</b> three-paycheck month(s) in the next year. The extra ${money(take)} check in each is a natural chance to throw a lump sum at your highest-APR debt.`
         : 'No three-paycheck months fall in this window.';
+}
+
+function renderLump(){
+    const body = document.getElementById('lumpBody');
+    if(!body) return;
+    if(data.lumpAmt==null) data.lumpAmt = data.income ? num(data.income.takeHomePerCheck) : 0;
+    const lump = num(data.lumpAmt);
+    const el = document.getElementById('lumpAmt');
+    if(el && document.activeElement!==el) el.value = lump;
+    // Rank debts by APR (highest first) — those give the best return on a lump sum.
+    const debts = data.accounts
+        .filter(a=>['Credit Card','Loan'].includes(a.type) && remaining(a)>0 && num(a.apr)>0 && num(a.pay)>0)
+        .sort((x,y)=>num(y.apr)-num(x.apr));
+    if(!debts.length){ body.innerHTML='<tr><td colspan="7" class="note">Add APR + monthly payment to debts to model this.</td></tr>'; return; }
+    body.innerHTML = debts.map(a=>{
+        const bal = remaining(a), apr=num(a.apr), pay=num(a.pay);
+        const after = Math.max(0, bal - lump);
+        const base = amortize(bal, apr, pay);
+        const post = amortize(after, apr, pay);
+        const saved = (base.neverPays?0:base.interest) - (post.neverPays?0:post.interest);
+        const utilNow = (a.type==='Credit Card' && num(a.limit)) ? bal/num(a.limit)*100 : null;
+        const utilAfter = (a.type==='Credit Card' && num(a.limit)) ? after/num(a.limit)*100 : null;
+        const utilTxt = utilNow==null ? '—' : `${utilNow.toFixed(0)}% → <b style="color:var(--good)">${utilAfter.toFixed(0)}%</b>`;
+        const payoffTxt = base.neverPays ? 'never → '+ (post.neverPays?'never':post.months+' mo')
+            : `${base.months} mo → <b style="color:var(--good)">${post.months} mo</b>`;
+        return `<tr>
+            <td>${a.name}</td>
+            <td class="num">${apr.toFixed(2)}%</td>
+            <td class="num">${money(bal)}</td>
+            <td class="num"><b>${money(after)}</b></td>
+            <td class="num">${payoffTxt}</td>
+            <td class="num"><b style="color:var(--good)">${money(Math.max(0,saved))}</b></td>
+            <td class="num">${utilTxt}</td>
+        </tr>`;
+    }).join('');
+    const top = debts[0];
+    document.getElementById('lumpNote').innerHTML =
+        `Best move: apply the ${money(lump)} to <b>${top.name}</b> (highest APR at ${num(top.apr).toFixed(2)}%). `+
+        `That saves the most interest and, on a credit card, gives the biggest utilization drop — the fastest credit-score lift.`;
 }
 
 function renderCalendar(){
