@@ -10,6 +10,17 @@
     { "title": "Emergency / Vacation Fund", "target": 1000, "current": 601.28, "kind": "savings" },
     { "title": "Grow Regular Savings", "target": 5000, "current": 734.61, "kind": "savings" },
     { "title": "Checking buffer", "target": 2000, "current": 616.76, "kind": "savings" },
-    { "title": "Credit score", "target": 750, "current": 650, "kind": "credit" }
+    { "title": "Credit score (Fair \u2192 Good)", "target": 720, "current": 626, "kind": "credit" }
+  ],
+  "spendPeriod": "Last 30 days (as of 9/25/2026)",
+  "spending": [
+    { "category": "Home Expenses", "amount": 1509.71 },
+    { "category": "Business Services", "amount": 602.39 },
+    { "category": "Food Expenses", "amount": 434.03 },
+    { "category": "Miscellaneous Expenses", "amount": 404.21 },
+    { "category": "Insurance", "amount": 277.85 },
+    { "category": "Personal & Family", "amount": 106.56 },
+    { "category": "Automotive Expenses", "amount": 66.62 },
+    { "category": "Healthcare", "amount": 24.36 }
   ]
 }

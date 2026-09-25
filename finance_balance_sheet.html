@@ -126,6 +126,27 @@
         <div class="goalgrid" id="goalGrid"></div>
     </div>
 
+    <div class="panel">
+        <h2>Monthly Spending <span class="hint" id="spendMeta">Where the money goes. Tap to edit.</span></h2>
+        <div class="tablewrap">
+            <table id="spendTable">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th class="num">Amount</th>
+                        <th class="num">% of total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="spendBody"></tbody>
+                <tfoot id="spendFoot"></tfoot>
+            </table>
+        </div>
+        <div class="add-row">
+            <button onclick="addSpend()">+ Add category</button>
+        </div>
+    </div>
+
     <div class="footer-note">
         Everything you enter is saved in this browser and to the file when you export.<br>
         To sync across phone &amp; desktop: edit, <b>Export data</b>, and commit the JSON to your Git repo (or use GitHub's web/mobile editor).
@@ -182,6 +203,7 @@ function render() {
     renderStats();
     renderAccounts();
     renderGoals();
+    renderSpending();
     save();
 }
 
@@ -272,6 +294,34 @@ function renderGoals() {
         <button class="primary" onclick="addGoal()">+ Add goal</button></div>`;
 }
 
+function renderSpending() {
+    const spend = data.spending || [];
+    const total = spend.reduce((s,r)=>s+num(r.amount),0);
+    const meta = document.getElementById('spendMeta');
+    if(meta) meta.textContent = data.spendPeriod ? ('Period: '+data.spendPeriod+' • total '+money(total)) : ('Total '+money(total));
+    const body = document.getElementById('spendBody');
+    if(!body) return;
+    body.innerHTML = spend.map((r,i)=>{
+        const pct = total>0 ? (num(r.amount)/total*100) : 0;
+        return `<tr>
+            <td>${cell(r.category,`oninput="updSpend(${i},'category',this.value)"`)}</td>
+            <td class="num">${cell(r.amount,`oninput="updSpend(${i},'amount',this.value)"`,{num:true})}</td>
+            <td class="num">${pct.toFixed(0)}%</td>
+            <td class="row-actions"><button class="danger" onclick="delSpend(${i})">✕</button></td>
+        </tr>`;
+    }).join('');
+    document.getElementById('spendFoot').innerHTML = `<tr>
+        <td>Total spend</td>
+        <td class="num">${money(total)}</td>
+        <td class="num">100%</td>
+        <td></td>
+    </tr>`;
+}
+
+function updSpend(i,field,val){ data.spending[i][field] = field==='amount'?num(val):val; renderSpending(); save(); }
+function addSpend(){ if(!data.spending) data.spending=[]; data.spending.push({category:'New category',amount:0}); render(); }
+function delSpend(i){ data.spending.splice(i,1); render(); }
+
 function upd(i,field,val){ data.accounts[i][field] = (['balance','paid','min','apr'].includes(field))?num(val):val;
     if(['balance','paid'].includes(field)) renderAccounts(), renderStats(); save(); }
 function updGoal(i,field,val){ data.goals[i][field] = (['target','current'].includes(field))?num(val):val;
@@ -303,7 +353,7 @@ function importJSON(e){
     reader.onload = () => {
         try {
             const parsed = JSON.parse(reader.result);
-            if(parsed.accounts && parsed.goals){ data = parsed; render(); alert('Data imported.'); }
+            if(parsed.accounts && parsed.goals){ if(!parsed.spending) parsed.spending=[]; data = parsed; render(); alert('Data imported.'); }
             else alert('That file does not look like finance data.');
         } catch(err){ alert('Could not read that file: '+err.message); }
     };
