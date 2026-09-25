@@ -680,7 +680,7 @@ function renderInvestments(){
     let totBal=0, totContrib=0;
     body.innerHTML = list.map(({a,i})=>{
         const bal = num(a.balance);
-        const contribM = num(a.contribPerMonth) + num(a.contribPerCheck)*perYear/12;
+        const contribM = num(a.contribPerMonth) + num(a.contribPerCheck)*perYear/12 + monthlyDraft(a);
         totBal += bal; totContrib += contribM;
         return `<tr>
             <td>${cell(a.name,`oninput="upd(${i},'name',this.value)"`)}</td>
@@ -765,6 +765,37 @@ function amortize(balance, apr, payment){
     return {months, interest, neverPays:false};
 }
 
+// Monthly total drafted for an account with recurring draft days.
+function monthlyDraft(a){
+    const days = Array.isArray(a.draftDays)?a.draftDays.length:(num(a.draftDay)>0?1:0);
+    return days>0 ? num(a.draftAmount)*days : 0;
+}
+
+// Payoff date for a 0%-style debt paid on fixed draft days (e.g. settlement program).
+// Steps through the actual draft-day calendar until the balance is cleared.
+function draftPayoffDate(a){
+    const bal = remaining(a);
+    const perDraft = num(a.draftAmount);
+    let daysArr = Array.isArray(a.draftDays)?a.draftDays.map(num).filter(n=>n>0):(num(a.draftDay)>0?[num(a.draftDay)]:[]);
+    if(bal<=0 || perDraft<=0 || !daysArr.length) return null;
+    daysArr = daysArr.slice().sort((x,y)=>x-y);
+    const today = new Date(); today.setHours(0,0,0,0);
+    let remain = bal, count = 0, last = null, guard = 0;
+    // find first upcoming draft date
+    let year = today.getFullYear(), month = today.getMonth();
+    while(remain > 0.005 && guard < 600){
+        for(const day of daysArr){
+            const d = new Date(year, month, day);
+            if(d < today) continue;
+            remain -= perDraft; count++; last = d;
+            if(remain <= 0.005) break;
+        }
+        month++; if(month>11){ month=0; year++; }
+        guard++;
+    }
+    return { date:last, payments:count };
+}
+
 function renderPayoff(){
     const body = document.getElementById('payoffBody');
     if(!body) return;
@@ -782,7 +813,17 @@ function renderPayoff(){
         const bal=remaining(a), apr=num(a.apr), basePay=num(a.pay);
         const pay = basePay + (i===topAprIdx?extra:0);
         let monthsTxt, dateTxt, intTxt;
-        if(!apr || !basePay){ monthsTxt='—'; dateTxt='set APR & pay'; intTxt='—'; anyUnknown=true; }
+        const draftMo = monthlyDraft(a);
+        if(!apr && draftMo>0){
+            // 0%-style debt paid via fixed drafts (e.g. settlement program)
+            const po = draftPayoffDate(a);
+            if(po && po.date){
+                monthsTxt = po.payments + ' pmts';
+                dateTxt = po.date.toLocaleDateString('en-US',{year:'numeric',month:'short'});
+                intTxt = '$0 (0%)';
+            } else { monthsTxt='—'; dateTxt='—'; intTxt='—'; }
+        }
+        else if(!apr || !basePay){ monthsTxt='—'; dateTxt='set APR & pay'; intTxt='—'; anyUnknown=true; }
         else {
             const res = amortize(bal, apr, pay);
             if(res.neverPays){ monthsTxt='∞'; dateTxt='payment too low'; intTxt='∞'; anyNever=true; }
@@ -798,7 +839,7 @@ function renderPayoff(){
             <td>${a.name}${i===topAprIdx && extra>0?' <span style="color:var(--good);font-size:.72rem;">+extra</span>':''}</td>
             <td class="num">${money(bal)}</td>
             <td class="num">${cell(a.apr,`oninput="upd(${i},'apr',this.value); renderPayoff();"`,{num:true})}</td>
-            <td class="num">${cell(a.pay,`oninput="upd(${i},'pay',this.value); renderPayoff();"`,{num:true})}</td>
+            <td class="num">${draftMo>0 ? money(draftMo)+'<span style="color:var(--muted);font-size:.7rem;">/mo</span>' : cell(a.pay,`oninput="upd(${i},'pay',this.value); renderPayoff();"`,{num:true})}</td>
             <td class="num">${monthsTxt}</td>
             <td class="num">${dateTxt}</td>
             <td class="num">${intTxt}</td>
