@@ -6,6 +6,7 @@
     { "name": "Ollo Platinum *7501", "type": "Credit Card", "balance": 2922.37, "paid": 0, "min": 0, "due": "2026-09-27", "apr": 0, "limit": 3800, "status": "Current" },
     { "name": "PayPal Credit Card *1214", "type": "Credit Card", "balance": 2636.03, "paid": 0, "min": 0, "due": "", "apr": 0, "limit": 4924, "status": "Current" },
     { "name": "Klarna (Southwest Airlines BNPL)", "type": "Loan", "balance": 1070.35, "paid": 0, "min": 179.86, "due": "2026-11-04", "apr": 0, "pay": 179.86, "status": "In Progress" },
+    { "name": "Auto Insurance *0759 (Private Passenger, monthly)", "type": "Bill", "balance": 117.85, "paid": 0, "min": 117.85, "due": "2026-09-25", "apr": 0, "status": "Autopay" },
     { "name": "Flex Pay HELOC *0002", "type": "Loan", "balance": 13624.26, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" },
     { "name": "MOHELA Student Loan (Chase Undergrad *2464)", "type": "Loan", "balance": 12280.28, "paid": 0, "min": 0, "due": "2026-10-07", "apr": 13.25, "pay": 135, "status": "Current" },
     { "name": "Global Holdings LLC (debt settlement escrow) *4402", "type": "Savings", "balance": 1673.43, "paid": 0, "min": 0, "due": "", "apr": 0, "status": "In Progress" }
